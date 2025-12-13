@@ -1,98 +1,95 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import { UtensilsCrossed } from "lucide-react";
+import { Coffee } from "lucide-react";
 
 const Login = () => {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [error, setError] = useState("");
+
   const { login } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !mobile) {
-      setError("Please fill in all fields");
+      setError("Please enter your name and mobile number");
       return;
     }
-
     const success = await login(name, mobile);
     if (success) navigate("/home");
-    else setError("Login failed. Please try again.");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
-
-      {/* Card */}
-      <div className="w-full max-w-sm rounded-3xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-2xl p-8">
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 px-4">
+      
+      {/* Glass Card */}
+      <div className="w-full max-w-sm bg-white/80 backdrop-blur-xl border border-amber-100 rounded-3xl shadow-2xl p-8">
+        
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-200">
-            <UtensilsCrossed className="w-7 h-7 text-white" />
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-300">
+            <Coffee className="text-white w-8 h-8" />
           </div>
-
-          <h1 className="mt-4 text-2xl font-extrabold text-gray-800 tracking-tight">
-            Zink Zaika
+          <h1 className="mt-4 text-2xl font-bold text-gray-800">
+            Zing Zaika
           </h1>
-
-          <p className="text-sm text-gray-500 mt-1 text-center">
-            Delicious moments start here 🍴
+          <p className="text-sm text-gray-500 mt-1">
+            Café & Restaurant
           </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 rounded-xl bg-red-50 text-red-600 text-sm px-4 py-2 text-center">
+          <div className="mb-4 text-center text-sm text-red-500 bg-red-50 py-2 rounded-xl">
             {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-
-          {/* Name */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
           <div>
-            <label className="text-xs font-semibold text-gray-600 uppercase">
+            <label className="text-sm font-medium text-gray-700">
               Full Name
             </label>
             <input
               type="text"
+              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
-              className="mt-2 w-full rounded-xl bg-gray-100 px-4 py-3 text-gray-800 outline-none border border-transparent focus:border-orange-400 focus:ring-2 focus:ring-orange-300 transition"
+              className="mt-1 w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none"
             />
           </div>
 
-          {/* Mobile */}
           <div>
-            <label className="text-xs font-semibold text-gray-600 uppercase">
+            <label className="text-sm font-medium text-gray-700">
               Mobile Number
             </label>
             <input
               type="tel"
+              placeholder="10 digit mobile number"
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
-              placeholder="98765 43210"
-              className="mt-2 w-full rounded-xl bg-gray-100 px-4 py-3 text-gray-800 outline-none border border-transparent focus:border-orange-400 focus:ring-2 focus:ring-orange-300 transition"
+              className="mt-1 w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none"
             />
           </div>
 
-          {/* Button */}
           <button
             type="submit"
-            className="w-full mt-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 py-3 font-semibold text-white shadow-lg shadow-orange-200 hover:brightness-110 active:scale-95 transition-all duration-200"
+            className="w-full mt-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-amber-300 hover:scale-[1.02] active:scale-95 transition"
           >
-            Continue to Menu 🍽️
+            Enter Café 🍽️
           </button>
         </form>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-gray-400">
-          By continuing, you agree to our Terms & Privacy Policy
+        <p className="text-xs text-center text-gray-500 mt-6">
+          By continuing, you agree to our{" "}
+          <span className="text-amber-600 font-medium">
+            Terms & Privacy Policy
+          </span>
         </p>
       </div>
     </div>

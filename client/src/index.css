@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* optional */
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8fafc;
+  font-family: system-ui, sans-serif;
 }
