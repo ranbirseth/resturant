@@ -120,9 +120,75 @@ The application will typically be accessible at `http://localhost:5173`.
 
 ## Working Flow
 
-1.  **Login**: Users start at the login page.
-2.  **Browse**: After authentication, they are redirected to the Home page to browse the menu.
-3.  **Select & Customize**: Users click on items to view details and customize their order.
-4.  **Cart**: Added items go to the cart where the user can review the total.
-5.  **Checkout**: Users select their order type (Dine-in/Takeaway) and confirm the order.
-6.  **Track**: Finally, a countdown screen shows the estimated time until the order is ready.
+1.  **Authentication**:
+    *   **Login**: Users start at the `/login` page. They enter credentials which are sent to `POST /api/auth/login`.
+    *   **Token**: On success, a JWT token is received and stored (e.g., in localStorage) for subsequent potential private route access.
+
+2.  **Menu Browsing**:
+    *   **Home**: Authenticated users are redirected to `/home`.
+    *   **Fetching**: The frontend fetches menu items via `GET /api/items`.
+    *   **Display**: Items are displayed in a responsive grid/list with images, names, and prices.
+
+3.  **Order Customization**:
+    *   **Details**: Clicking an item navigates to `/food/:id`.
+    *   **Customize**: Users can select options (size, toppings) at `/customize/:id` (if applicable) or directly add to cart.
+
+4.  **Cart Management**:
+    *   **Review**: The Cart page (`/cart`) displays selected items, quantities, and total price.
+    *   **Update**: Users can increase/decrease quantities or remove items.
+
+5.  **Checkout Process**:
+    *   **Order Type**: Users proceed to `/order-type` to select "Dine-in" or "Takeaway".
+    *   **Submission**: The final order object is constructed and sent to `POST /api/orders`.
+
+6.  **Post-Order Tracking**:
+    *   **Confirmation**: Upon successful submission, the user is routed to `/countdown`.
+    *   **Status**: This page shows a confirmation message and a countdown timer indicating when the food will be ready.
+
+## API Reference
+
+### Authentication
+
+#### Login User
+```http
+POST /api/auth/login
+```
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `email` | `string` | **Required**. User's email address |
+| `password` | `string` | **Required**. User's password |
+
+### Menu Items
+
+#### Get All Items
+```http
+GET /api/items
+```
+Returns a list of all available menu items.
+
+#### Seed Items
+```http
+POST /api/items/seed
+```
+Populates the database with initial sample data.
+
+### Orders
+
+#### Create Order
+```http
+POST /api/orders
+```
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `items` | `array` | **Required**. Array of cart items |
+| `totalAmount` | `number` | **Required**. Total cost of the order |
+| `orderType` | `string` | **Required**. "dine-in" or "takeaway" |
+
+#### Get Order by ID
+```http
+GET /api/orders/:id
+```
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `string` | **Required**. The ID of the order to fetch |
+

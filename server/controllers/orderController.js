@@ -4,7 +4,7 @@ const Order = require('../models/Order');
 // @route   POST /api/orders
 // @access  Public (User ID required)
 const createOrder = async (req, res) => {
-    const { userId, items, totalAmount, orderType, tableNumber } = req.body;
+    const { userId, items, totalAmount, orderType, tableNumber, couponCode, discountAmount, grossTotal } = req.body;
 
     if (!items || items.length === 0) {
         return res.status(400).json({ message: 'No order items' });
@@ -15,6 +15,9 @@ const createOrder = async (req, res) => {
             userId,
             items,
             totalAmount,
+            grossTotal,
+            couponCode,
+            discountAmount,
             orderType,
             tableNumber,
             status: 'Pending'
@@ -44,4 +47,25 @@ const getOrderById = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getOrderById };
+// @desc    Update Order Status (Simulate Admin / Kitchen)
+// @route   PUT /api/orders/:id/status
+const updateOrderStatus = async (req, res) => {
+    const { status, feedbackStatus } = req.body;
+    try {
+        const updates = {};
+        if (status) updates.status = status;
+        if (feedbackStatus) updates.feedbackStatus = feedbackStatus;
+
+        const order = await Order.findByIdAndUpdate(req.params.id, updates, { new: true });
+        
+        if (order) {
+            res.json(order);
+        } else {
+            res.status(404).json({ message: 'Order not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createOrder, getOrderById, updateOrderStatus };

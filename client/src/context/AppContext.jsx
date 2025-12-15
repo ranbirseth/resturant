@@ -7,9 +7,19 @@ export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
     const [menuItems, setMenuItems] = useState([]);
     const [cart, setCart] = useState([]);
+    const [coupon, setCoupon] = useState(null); // { code, discountType, value, discountAmount }
     const [loading, setLoading] = useState(false);
+    const [currentOrderId, setCurrentOrderId] = useState(localStorage.getItem('currentOrderId') || null);
 
     const API_URL = 'http://localhost:5000/api';
+
+    useEffect(() => {
+        if (currentOrderId) {
+            localStorage.setItem('currentOrderId', currentOrderId);
+        } else {
+            localStorage.removeItem('currentOrderId');
+        }
+    }, [currentOrderId]);
 
     useEffect(() => {
         fetchMenuItems();
@@ -49,6 +59,16 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const checkUserExist = async (mobile) => {
+        try {
+            const res = await axios.post(`${API_URL}/auth/check`, { mobile });
+            return res.data.exists;
+        } catch (error) {
+            console.error("Check User Error:", error);
+            return false;
+        }
+    };
+
     const addToCart = (item, quantity = 1, customizations = []) => {
         setCart(prev => {
             // Check if same item with same customizations exists
@@ -77,10 +97,38 @@ export const AppProvider = ({ children }) => {
         return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
 
+    const applyCoupon = async (code) => {
+        try {
+            const cartTotal = getCartTotal();
+            const res = await axios.post(`${API_URL}/coupons/validate`, { code, cartTotal });
+            if (res.data.success) {
+                setCoupon({
+                    code: res.data.code,
+                    discountType: res.data.discountType,
+                    value: res.data.value,
+                    discountAmount: res.data.discountAmount
+                });
+                return { success: true, message: res.data.message };
+            }
+        } catch (error) {
+            console.error("Coupon Error:", error);
+            return { success: false, message: error.response?.data?.message || 'Invalid Coupon' };
+        }
+    };
+
+    const removeCoupon = () => setCoupon(null);
+
+    const getFinalTotal = () => {
+        const subTotal = getCartTotal();
+        const discount = coupon ? coupon.discountAmount : 0;
+        return subTotal - discount > 0 ? subTotal - discount : 0;
+    };
+
     const placeOrder = async (orderData) => {
         try {
             const res = await axios.post(`${API_URL}/orders`, orderData);
             clearCart();
+            setCurrentOrderId(res.data._id); // Save current order ID
             return res.data;
         } catch (error) {
             console.error("Order Error:", error);
@@ -97,8 +145,14 @@ export const AppProvider = ({ children }) => {
         removeFromCart,
         clearCart,
         getCartTotal,
+        coupon,
+        applyCoupon,
+        removeCoupon,
+        getFinalTotal,
         login,
+        checkUserExist,
         placeOrder,
+        currentOrderId,
         loading
     };
 

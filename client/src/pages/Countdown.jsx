@@ -1,12 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 import { CheckCircle, Clock } from 'lucide-react';
+import FeedbackModal from '../components/FeedbackModal';
+import axios from 'axios';
 
 const Countdown = () => {
   const navigate = useNavigate();
+  const { currentOrderId, user } = useContext(AppContext);
   // 15 minutes = 900 seconds
   const [timeLeft, setTimeLeft] = useState(900);
   const [isReady, setIsReady] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    if (!currentOrderId) return;
+
+    const pollStatus = setInterval(async () => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/orders/${currentOrderId}`);
+            const order = res.data;
+            
+            if (order.status === 'Completed' || order.status === 'Ready') {
+                setIsReady(true);
+            }
+
+            if (order.feedbackStatus === 'Requested' || order.status === 'Completed') {
+                // Only show if not already submitted
+                if (order.feedbackStatus !== 'Submitted' && order.feedbackStatus !== 'Skipped') {
+                   setShowFeedback(true);
+                   clearInterval(pollStatus); // Stop polling once feedback is requested
+                }
+            }
+        } catch (error) {
+            console.error("Polling error", error);
+        }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(pollStatus);
+  }, [currentOrderId]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -68,6 +100,30 @@ const Countdown = () => {
                 </div>
             </div>
         )}
+
+        {showFeedback && currentOrderId && (
+            <FeedbackModal 
+                orderId={currentOrderId}
+                userId={user?._id}
+                onClose={() => setShowFeedback(false)}
+            />
+        )}
+
+        {/* DEV ONLY: TRIGGER FEEDBACK */}
+        <div className="fixed bottom-4 right-4 opacity-50 hover:opacity-100">
+             <button 
+                onClick={async () => {
+                    await axios.put(`http://localhost:5000/api/orders/${currentOrderId}/status`, {
+                        status: 'Completed',
+                        feedbackStatus: 'Requested'
+                    });
+                    setIsReady(true);
+                }}
+                className="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg"
+             >
+                DEV: Complete Order
+             </button>
+        </div>
 
     </div>
   );

@@ -1,15 +1,35 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
-import { ArrowLeft, PlayCircle, Utensils, ShoppingBag } from 'lucide-react'; // Using icons roughly
+import { ArrowLeft, PlayCircle, Utensils, ShoppingBag } from 'lucide-react';
+import CouponInput from '../components/CouponInput';
+import CouponCard from '../components/CouponCard';
+import axios from 'axios';
 
 const OrderType = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { placeOrder, user, cart, getCartTotal } = useContext(AppContext);
+  const { placeOrder, user, cart, getCartTotal, applyCoupon, removeCoupon, coupon, getFinalTotal } = useContext(AppContext);
   const [orderType, setOrderType] = useState(null); // 'Dine-in' | 'Takeaway'
   const [tableNumber, setTableNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+
+  React.useEffect(() => {
+    // Fetch available coupons
+    axios.get('http://localhost:5000/api/coupons')
+        .then(res => setCoupons(res.data))
+        .catch(err => console.error(err));
+  }, []);
+
+  const handleApplyCoupon = async (code) => {
+    setLoading(true);
+    const result = await applyCoupon(code);
+    setLoading(false);
+    if (!result.success) {
+        alert(result.message);
+    }
+  };
 
   const addons = location.state?.addons || {};
 
@@ -28,7 +48,10 @@ const OrderType = () => {
             price: item.price,
             customizations: Object.keys(addons).filter(k => addons[k]) // simplified
         })),
-        totalAmount: getCartTotal(), // Add addons cost logic if needed
+        totalAmount: getFinalTotal(), 
+        grossTotal: getCartTotal(),
+        couponCode: coupon?.code,
+        discountAmount: coupon?.discountAmount,
         orderType,
         tableNumber: orderType === 'Dine-in' ? tableNumber : undefined
     };
@@ -96,6 +119,53 @@ const OrderType = () => {
                 />
             </div>
         )}
+
+        {/* Coupon Section */}
+        <div className="mt-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Offers & Coupons</h3>
+            
+            <div className="mb-6">
+                <CouponInput 
+                    onApply={handleApplyCoupon} 
+                    onRemove={removeCoupon}
+                    appliedCoupon={coupon}
+                    loading={loading}
+                />
+            </div>
+
+            {!coupon && coupons.length > 0 && (
+                <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+                    {coupons.map(c => (
+                        <div key={c._id} className="min-w-[200px]">
+                            <CouponCard coupon={c} onSelect={handleApplyCoupon} />
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+
+        {/* Bill Details */}
+        <div className="mt-6 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4">Bill Details</h3>
+            <div className="flex justify-between text-gray-600 mb-2">
+                <span>Subtotal</span>
+                <span>₹{getCartTotal().toFixed(2)}</span>
+            </div>
+            {coupon && (
+                <div className="flex justify-between text-green-600 mb-2">
+                    <span>Coupon Discount ({coupon.code})</span>
+                    <span>- ₹{coupon.discountAmount.toFixed(2)}</span>
+                </div>
+            )}
+             <div className="flex justify-between text-gray-600 mb-2">
+                <span>Taxes & Charges</span>
+                <span>₹0.00</span>
+            </div>
+            <div className="border-t border-dashed border-gray-200 my-2 pt-2 flex justify-between font-bold text-lg text-gray-900">
+                <span>Grand Total</span>
+                <span>₹{getFinalTotal().toFixed(2)}</span>
+            </div>
+        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 z-20">

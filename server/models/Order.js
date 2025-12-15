@@ -11,10 +11,18 @@ const orderSchema = new mongoose.Schema({
             customizations: [String] // e.g., "Extra cheese", "Extra spicy"
         }
     ],
-    totalAmount: { type: Number, required: true },
+    totalAmount: { type: Number, required: true }, // This is the Final Payable Amount
+    grossTotal: { type: Number }, // Subtotal before discount
+    couponCode: { type: String },
+    discountAmount: { type: Number, default: 0 },
     orderType: { type: String, enum: ['Dine-in', 'Takeaway'], required: true },
     tableNumber: { type: String }, // Required if Dine-in
     status: { type: String, enum: ['Pending', 'Preparing', 'Ready', 'Completed'], default: 'Pending' },
+    feedbackStatus: { 
+        type: String, 
+        enum: ['Pending', 'Requested', 'Submitted', 'Skipped'], 
+        default: 'Pending' 
+    },
     completionConfig: {
         countDownSeconds: { type: Number, default: 900 } // 15 mins default
     }
