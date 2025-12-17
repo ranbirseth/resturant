@@ -8,34 +8,51 @@ import axios from 'axios';
 const Countdown = () => {
   const navigate = useNavigate();
   const { currentOrderId, user } = useContext(AppContext);
-  // 15 minutes = 900 seconds
+  // 15 minutes = 900 seconds (default)
   const [timeLeft, setTimeLeft] = useState(900);
+  const [totalTime, setTotalTime] = useState(900);
   const [isReady, setIsReady] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
   useEffect(() => {
     if (!currentOrderId) return;
 
-    const pollStatus = setInterval(async () => {
+    const fetchOrderAndPoll = async () => {
         try {
             const res = await axios.get(`http://localhost:5000/api/orders/${currentOrderId}`);
             const order = res.data;
             
+            // Sync initial time based on server config
+            if (order.completionConfig?.countDownSeconds && order.createdAt) {
+                const fetchedTotal = order.completionConfig.countDownSeconds;
+                setTotalTime(fetchedTotal); // Set total duration
+
+                const createdTime = new Date(order.createdAt).getTime();
+                const totalDuration = fetchedTotal * 1000;
+                const expectedEndTime = createdTime + totalDuration;
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((expectedEndTime - now) / 1000));
+                
+                setTimeLeft(remaining); 
+            }
+
             if (order.status === 'Completed' || order.status === 'Ready') {
                 setIsReady(true);
             }
 
             if (order.feedbackStatus === 'Requested' || order.status === 'Completed') {
-                // Only show if not already submitted
                 if (order.feedbackStatus !== 'Submitted' && order.feedbackStatus !== 'Skipped') {
                    setShowFeedback(true);
-                   clearInterval(pollStatus); // Stop polling once feedback is requested
                 }
             }
         } catch (error) {
             console.error("Polling error", error);
         }
-    }, 5000); // Check every 5 seconds
+    };
+
+    fetchOrderAndPoll(); // Initial call
+    
+    const pollStatus = setInterval(fetchOrderAndPoll, 5000); // Check every 5 seconds
 
     return () => clearInterval(pollStatus);
   }, [currentOrderId]);
@@ -95,7 +112,7 @@ const Countdown = () => {
                 <div className="mt-12 w-full max-w-md bg-gray-800 rounded-full h-2 overflow-hidden">
                     <div 
                         className="h-full bg-orange-500 transition-all duration-1000 ease-linear"
-                        style={{ width: `${((900 - timeLeft) / 900) * 100}%` }}
+                        style={{ width: `${((totalTime - timeLeft) / totalTime) * 100}%` }}
                     />
                 </div>
             </div>

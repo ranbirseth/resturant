@@ -26,7 +26,7 @@ const seedItems = async (req, res) => {
         const createdItems = await Item.insertMany(dummyItems);
         res.status(201).json(createdItems);
     } catch (error) {
-         res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 }
 

@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Item = require('../models/Item');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -11,6 +12,19 @@ const createOrder = async (req, res) => {
     }
 
     try {
+        // Calculate total preparation time (Max of all items)
+        let maxPrepTime = 15; // default
+        
+        if (items && items.length > 0) {
+            const itemIds = items.map(i => i.itemId);
+            const dbItems = await Item.find({ _id: { $in: itemIds } });
+            
+            if (dbItems.length > 0) {
+                const prepTimes = dbItems.map(item => item.preparationTime || 15);
+                maxPrepTime = Math.max(...prepTimes);
+            }
+        }
+
         const order = new Order({
             userId,
             items,
@@ -20,7 +34,10 @@ const createOrder = async (req, res) => {
             discountAmount,
             orderType,
             tableNumber,
-            status: 'Pending'
+            status: 'Pending',
+            completionConfig: {
+                countDownSeconds: maxPrepTime * 60
+            }
         });
 
         const createdOrder = await order.save();
