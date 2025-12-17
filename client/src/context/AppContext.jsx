@@ -79,7 +79,7 @@ export const AppProvider = ({ children }) => {
 
             if (existingIndex > -1) {
                 const newCart = [...prev];
-                newCart[existingIndex].quantity += quantity;
+                newCart[existingIndex].quantity = quantity;
                 return newCart;
             } else {
                 return [...prev, { ...item, quantity, customizations }];
