@@ -14,11 +14,11 @@ const createOrder = async (req, res) => {
     try {
         // Calculate total preparation time (Max of all items)
         let maxPrepTime = 15; // default
-        
+
         if (items && items.length > 0) {
             const itemIds = items.map(i => i.itemId);
             const dbItems = await Item.find({ _id: { $in: itemIds } });
-            
+
             if (dbItems.length > 0) {
                 const prepTimes = dbItems.map(item => item.preparationTime || 15);
                 maxPrepTime = Math.max(...prepTimes);
@@ -74,7 +74,7 @@ const updateOrderStatus = async (req, res) => {
         if (feedbackStatus) updates.feedbackStatus = feedbackStatus;
 
         const order = await Order.findByIdAndUpdate(req.params.id, updates, { new: true });
-        
+
         if (order) {
             res.json(order);
         } else {
@@ -85,4 +85,16 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getOrderById, updateOrderStatus };
+// @desc    Get all orders
+// @route   GET /api/orders
+// @access  Admin
+const getOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({}).populate('userId', 'name mobile').sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createOrder, getOrderById, updateOrderStatus, getOrders };
