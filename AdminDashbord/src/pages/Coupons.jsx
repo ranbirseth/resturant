@@ -6,8 +6,9 @@ import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import Table, { TableRow, TableCell } from '../components/ui/Table';
+import BASE_API_URL from '../config';
 
-const API_URL = 'https://resturant-vd5x.onrender.com/api/coupons';
+const API_URL = `${BASE_API_URL}/coupons`;
 
 export default function Coupons() {
   const [coupons, setCoupons] = useState([]);

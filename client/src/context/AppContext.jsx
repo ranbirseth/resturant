@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 
 export const AppContext = createContext();
 
@@ -10,8 +11,6 @@ export const AppProvider = ({ children }) => {
     const [coupon, setCoupon] = useState(null); // { code, discountType, value, discountAmount }
     const [loading, setLoading] = useState(false);
     const [currentOrderId, setCurrentOrderId] = useState(localStorage.getItem('currentOrderId') || null);
-
-    const API_URL = 'https://resturant-vd5x.onrender.com/api';
 
     useEffect(() => {
         if (currentOrderId) {

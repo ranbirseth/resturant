@@ -1,7 +1,8 @@
 import axios from 'axios';
+import API_URL from '../config';
 
 const api = axios.create({
-    baseURL: 'https://resturant-vd5x.onrender.com/api',
+    baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },

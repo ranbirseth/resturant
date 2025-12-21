@@ -4,6 +4,7 @@ import { AppContext } from '../context/AppContext';
 import { CheckCircle, Clock } from 'lucide-react';
 import FeedbackModal from '../components/FeedbackModal';
 import axios from 'axios';
+import API_URL from '../config';
 
 const Countdown = () => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const Countdown = () => {
 
     const fetchOrderAndPoll = async () => {
         try {
-            const res = await axios.get(`https://resturant-vd5x.onrender.com/api/orders/${currentOrderId}`);
+            const res = await axios.get(`${API_URL}/orders/${currentOrderId}`);
             const order = res.data;
             
             // Sync initial time based on server config
@@ -130,7 +131,7 @@ const Countdown = () => {
         <div className="fixed bottom-4 right-4 opacity-50 hover:opacity-100">
              <button 
                 onClick={async () => {
-                    await axios.put(`http://localhost:5000/api/orders/${currentOrderId}/status`, {
+                    await axios.put(`${API_URL}/orders/${currentOrderId}/status`, {
                         status: 'Completed',
                         feedbackStatus: 'Requested'
                     });

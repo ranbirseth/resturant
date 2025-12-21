@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://resturant-vd5x.onrender.com/api';
+import API_URL from '../config';
+const API_BASE_URL = API_URL;
 
 /**
  * Verify admin secret code

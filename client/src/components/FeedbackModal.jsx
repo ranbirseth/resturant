@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
 import axios from 'axios';
+import API_URL from '../config';
 
 const FeedbackModal = ({ orderId, onClose, userId }) => {
   const [rating, setRating] = useState(0);
@@ -22,7 +23,7 @@ const FeedbackModal = ({ orderId, onClose, userId }) => {
     if (rating === 0) return;
     
     try {
-      await axios.post('https://resturant-vd5x.onrender.com/api/feedback', {
+      await axios.post(`${API_URL}/feedback`, {
         orderId,
         userId,
         rating,

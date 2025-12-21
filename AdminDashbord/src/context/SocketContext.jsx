@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import { SOCKET_URL } from '../config';
 
 const SocketContext = createContext();
 
@@ -12,7 +13,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Init socket connection
-        const newSocket = io('https://resturant-vd5x.onrender.com');
+        const newSocket = io(SOCKET_URL);
         setSocket(newSocket);
 
         // Cleanup

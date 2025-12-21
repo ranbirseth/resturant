@@ -19,8 +19,25 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow all origins for now (dev) - restrict in prod
-        methods: ["GET", "POST"]
+        origin: (origin, callback) => {
+            const allowedOrigins = [
+                "http://localhost:5173",
+                "http://localhost:5174",
+                process.env.CLIENT_URL,
+                process.env.ADMIN_URL
+            ].filter(Boolean).map(url => url.replace(/\/$/, "")); // Remove trailing slash if present
+
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+                callback(null, true);
+            } else {
+                console.log("Blocked by CORS:", origin);
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        methods: ["GET", "POST", "PUT", "DELETE"]
     }
 });
 
@@ -30,7 +47,27 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            process.env.CLIENT_URL,
+            process.env.ADMIN_URL
+        ].filter(Boolean).map(url => url.replace(/\/$/, ""));
+
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+            callback(null, true);
+        } else {
+            console.log("Blocked by CORS:", origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);

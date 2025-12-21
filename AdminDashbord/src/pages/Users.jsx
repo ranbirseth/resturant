@@ -4,6 +4,7 @@ import Card, { CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Table, { TableRow, TableCell } from '../components/ui/Table';
+import API_URL from '../config';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -18,7 +19,7 @@ export default function Users() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://resturant-vd5x.onrender.com/api/auth/all');
+      const response = await fetch(`${API_URL}/auth/all`);
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }

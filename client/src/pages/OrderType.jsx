@@ -5,6 +5,7 @@ import { ArrowLeft, PlayCircle, Utensils, ShoppingBag } from 'lucide-react';
 import CouponInput from '../components/CouponInput';
 import CouponCard from '../components/CouponCard';
 import axios from 'axios';
+import API_URL from '../config';
 
 const OrderType = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const OrderType = () => {
 
   React.useEffect(() => {
     // Fetch available coupons
-    axios.get('https://resturant-vd5x.onrender.com/api/coupons')
+    axios.get(`${API_URL}/coupons`)
         .then(res => setCoupons(res.data))
         .catch(err => console.error(err));
   }, []);
