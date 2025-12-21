@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://resturant-vd5x.onrender.com/api';
 
 /**
  * Verify admin secret code

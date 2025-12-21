@@ -18,7 +18,7 @@ export default function Users() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/all');
+      const response = await fetch('https://resturant-vd5x.onrender.com/api/auth/all');
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }

@@ -19,7 +19,7 @@ const Countdown = () => {
 
     const fetchOrderAndPoll = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/orders/${currentOrderId}`);
+            const res = await axios.get(`https://resturant-vd5x.onrender.com/api/orders/${currentOrderId}`);
             const order = res.data;
             
             // Sync initial time based on server config

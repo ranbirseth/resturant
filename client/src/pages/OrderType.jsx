@@ -17,7 +17,7 @@ const OrderType = () => {
 
   React.useEffect(() => {
     // Fetch available coupons
-    axios.get('http://localhost:5000/api/coupons')
+    axios.get('https://resturant-vd5x.onrender.com/api/coupons')
         .then(res => setCoupons(res.data))
         .catch(err => console.error(err));
   }, []);

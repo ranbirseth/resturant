@@ -7,7 +7,7 @@ import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import Table, { TableRow, TableCell } from '../components/ui/Table';
 
-const API_URL = 'http://localhost:5000/api/coupons';
+const API_URL = 'https://resturant-vd5x.onrender.com/api/coupons';
 
 export default function Coupons() {
   const [coupons, setCoupons] = useState([]);

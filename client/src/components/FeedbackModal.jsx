@@ -22,7 +22,7 @@ const FeedbackModal = ({ orderId, onClose, userId }) => {
     if (rating === 0) return;
     
     try {
-      await axios.post('http://localhost:5000/api/feedback', {
+      await axios.post('https://resturant-vd5x.onrender.com/api/feedback', {
         orderId,
         userId,
         rating,

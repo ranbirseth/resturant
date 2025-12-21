@@ -11,7 +11,7 @@ export const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [currentOrderId, setCurrentOrderId] = useState(localStorage.getItem('currentOrderId') || null);
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = 'https://resturant-vd5x.onrender.com/api';
 
     useEffect(() => {
         if (currentOrderId) {

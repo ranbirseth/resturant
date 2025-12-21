@@ -12,7 +12,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Init socket connection
-        const newSocket = io('http://localhost:5000');
+        const newSocket = io('https://resturant-vd5x.onrender.com');
         setSocket(newSocket);
 
         // Cleanup
