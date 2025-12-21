@@ -58,7 +58,11 @@ app.use(cors({
 
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        const isAllowed = allowedOrigins.includes(origin) ||
+            origin.endsWith('.vercel.app') ||
+            origin.endsWith('.onrender.com');
+
+        if (isAllowed || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
             console.log("Blocked by CORS:", origin);
