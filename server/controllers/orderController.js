@@ -41,6 +41,13 @@ const createOrder = async (req, res) => {
         });
 
         const createdOrder = await order.save();
+
+        // Emit real-time notification to admin/kitchen
+        // Using req.io which we attached in server.js
+        if (req.io) {
+            req.io.emit('newOrder', createdOrder);
+        }
+
         res.status(201).json(createdOrder);
     } catch (error) {
         res.status(500).json({ message: error.message });

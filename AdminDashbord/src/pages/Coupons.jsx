@@ -1,37 +1,132 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Ticket, Calendar, CheckCircle2, XCircle } from 'lucide-react';
-import Card, { CardContent, CardHeader } from '../components/ui/Card';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Ticket, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import Card, { CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import Table, { TableRow, TableCell } from '../components/ui/Table';
 
-const initialCoupons = [
-  { id: 1, code: 'ZINK20', type: 'Percentage', value: 20, minOrder: 500, expiry: '2024-12-31', status: 'Active', usageCount: 45 },
-  { id: 2, code: 'FLAT100', type: 'Flat', value: 100, minOrder: 800, expiry: '2024-12-15', status: 'Active', usageCount: 12 },
-  { id: 3, code: 'WELCOME50', type: 'Percentage', value: 50, minOrder: 200, expiry: '2024-11-30', status: 'Expired', usageCount: 89 },
-];
+const API_URL = 'http://localhost:5000/api/coupons';
 
 export default function Coupons() {
-  const [coupons, setCoupons] = useState(initialCoupons);
+  const [coupons, setCoupons] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     code: '',
-    type: 'Percentage',
+    type: 'PERCENT',
     value: '',
-    minOrder: '',
-    expiry: '',
-    status: 'Active'
+    minOrder: ''
   });
 
-  const handleSave = () => {
-    setCoupons([...coupons, { ...formData, id: Date.now(), usageCount: 0 }]);
-    setIsModalOpen(false);
+  // Fetch coupons on component mount
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  const fetchCoupons = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/all`);
+      const data = await response.json();
+      setCoupons(data);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching coupons:', err);
+      setError('Failed to load coupons');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const toggleStatus = (id) => {
-    setCoupons(coupons.map(c => c.id === id ? { ...c, status: c.status === 'Active' ? 'Disabled' : 'Active' } : c));
+  const handleSave = async () => {
+    // Validation
+    if (!formData.code || !formData.value || !formData.minOrder) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError('');
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: formData.code,
+          discountType: formData.type,
+          value: parseFloat(formData.value),
+          minOrderAmount: parseFloat(formData.minOrder)
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create coupon');
+      }
+
+      // Add new coupon to list
+      setCoupons([data, ...coupons]);
+      
+      // Reset form and close modal
+      setFormData({ code: '', type: 'PERCENT', value: '', minOrder: '' });
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Error creating coupon:', err);
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update coupon');
+      }
+
+      // Update coupon in list
+      setCoupons(coupons.map(c => c._id === id ? data : c));
+    } catch (err) {
+      console.error('Error updating coupon:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this coupon?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete coupon');
+      }
+
+      // Remove coupon from list
+      setCoupons(coupons.filter(c => c._id !== id));
+    } catch (err) {
+      console.error('Error deleting coupon:', err);
+      setError(err.message);
+    }
   };
 
   return (
@@ -47,72 +142,122 @@ export default function Coupons() {
         </Button>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
-          <Table headers={['Coupon Code', 'Discount', 'Min. Order', 'Expiry', 'Usage', 'Status', 'Actions']}>
-            {coupons.map((coupon) => (
-              <TableRow key={coupon.id}>
-                <TableCell>
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mr-3">
-                      <Ticket size={16} />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+            </div>
+          ) : coupons.length === 0 ? (
+            <div className="text-center py-12 text-slate-500">
+              <Ticket className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p>No coupons yet. Create your first coupon!</p>
+            </div>
+          ) : (
+            <Table headers={['Coupon Code', 'Discount', 'Min. Order', 'Status', 'Actions']}>
+              {coupons.map((coupon) => (
+                <TableRow key={coupon._id}>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mr-3">
+                        <Ticket size={16} />
+                      </div>
+                      <span className="font-bold text-slate-900 tracking-wider">{coupon.code}</span>
                     </div>
-                    <span className="font-bold text-slate-900 tracking-wider">{coupon.code}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium text-slate-700">
-                    {coupon.type === 'Percentage' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
-                  </span>
-                </TableCell>
-                <TableCell>₹{coupon.minOrder}</TableCell>
-                <TableCell>
-                  <div className="flex items-center text-slate-600">
-                    <Calendar size={14} className="mr-1.5" />
-                    {coupon.expiry}
-                  </div>
-                </TableCell>
-                <TableCell>
-                   <span className="text-slate-600">{coupon.usageCount} times Used</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={coupon.status === 'Active' ? 'green' : coupon.status === 'Expired' ? 'red' : 'gray'}>
-                    {coupon.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => toggleStatus(coupon.id)}
-                      disabled={coupon.status === 'Expired'}
-                    >
-                      {coupon.status === 'Active' ? <XCircle size={18} className="text-slate-400" /> : <CheckCircle2 size={18} className="text-green-600" />}
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash2 size={18} className="text-rose-500" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </Table>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium text-slate-700">
+                      {coupon.discountType === 'PERCENT' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                    </span>
+                  </TableCell>
+                  <TableCell>₹{coupon.minOrderAmount}</TableCell>
+                  <TableCell>
+                    <Badge variant={coupon.isActive ? 'green' : 'gray'}>
+                      {coupon.isActive ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => toggleStatus(coupon._id, coupon.isActive)}
+                        title={coupon.isActive ? 'Disable coupon' : 'Enable coupon'}
+                      >
+                        {coupon.isActive ? 
+                          <XCircle size={18} className="text-slate-400" /> : 
+                          <CheckCircle2 size={18} className="text-green-600" />
+                        }
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDelete(coupon._id)}
+                        title="Delete coupon"
+                      >
+                        <Trash2 size={18} className="text-rose-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </Table>
+          )}
         </CardContent>
       </Card>
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setError('');
+          setFormData({ code: '', type: 'PERCENT', value: '', minOrder: '' });
+        }}
         title="Create New Coupon"
         footer={
           <div className="flex space-x-3 w-full">
-            <Button variant="secondary" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleSave}>Create Coupon</Button>
+            <Button 
+              variant="secondary" 
+              className="flex-1" 
+              onClick={() => {
+                setIsModalOpen(false);
+                setError('');
+                setFormData({ code: '', type: 'PERCENT', value: '', minOrder: '' });
+              }}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1" 
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Coupon'
+              )}
+            </Button>
           </div>
         }
       >
         <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          
           <Input 
             label="Coupon Code" 
             placeholder="e.g. SAVE30" 
@@ -127,8 +272,8 @@ export default function Coupons() {
                 value={formData.type}
                 onChange={e => setFormData({...formData, type: e.target.value})}
               >
-                <option value="Percentage">Percentage (%)</option>
-                <option value="Flat">Flat Amount (₹)</option>
+                <option value="PERCENT">Percentage (%)</option>
+                <option value="FLAT">Flat Amount (₹)</option>
               </select>
             </div>
             <Input 
@@ -139,21 +284,13 @@ export default function Coupons() {
               onChange={e => setFormData({...formData, value: e.target.value})}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="Min Order Value (₹)" 
-              type="number" 
-              placeholder="e.g. 500" 
-              value={formData.minOrder}
-              onChange={e => setFormData({...formData, minOrder: e.target.value})}
-            />
-            <Input 
-              label="Expiry Date" 
-              type="date" 
-              value={formData.expiry}
-              onChange={e => setFormData({...formData, expiry: e.target.value})}
-            />
-          </div>
+          <Input 
+            label="Min Order Value (₹)" 
+            type="number" 
+            placeholder="e.g. 500" 
+            value={formData.minOrder}
+            onChange={e => setFormData({...formData, minOrder: e.target.value})}
+          />
         </div>
       </Modal>
     </div>
