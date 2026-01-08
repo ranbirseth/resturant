@@ -35,7 +35,11 @@ const seedItems = async (req, res) => {
 // @access  Admin
 const createItem = async (req, res) => {
     try {
-        const item = new Item(req.body);
+        const itemData = req.body;
+        if (req.file) {
+            itemData.image = `/uploads/${req.file.filename}`;
+        }
+        const item = new Item(itemData);
         const createdItem = await item.save();
         res.status(201).json(createdItem);
     } catch (error) {
@@ -48,7 +52,11 @@ const createItem = async (req, res) => {
 // @access  Admin
 const updateItem = async (req, res) => {
     try {
-        const item = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const itemData = req.body;
+        if (req.file) {
+            itemData.image = `/uploads/${req.file.filename}`;
+        }
+        const item = await Item.findByIdAndUpdate(req.params.id, itemData, { new: true });
         if (item) {
             res.json(item);
         } else {

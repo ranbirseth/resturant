@@ -19,25 +19,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: (origin, callback) => {
-            const allowedOrigins = [
-                "http://localhost:5173",
-                "http://localhost:5174",
-                process.env.CLIENT_URL,
-                process.env.ADMIN_URL
-            ].filter(Boolean).map(url => url.replace(/\/$/, "")); // Remove trailing slash if present
-
-            // Allow requests with no origin (like mobile apps or curl requests)
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-                callback(null, true);
-            } else {
-                console.log("Blocked by CORS:", origin);
-                callback(new Error('Not allowed by CORS'));
-            }
-        },
-        methods: ["GET", "POST", "PUT", "DELETE"]
+        origin: [
+            "http://localhost:5173",  // Client app
+            "http://localhost:5174"   // Admin dashboard
+        ],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true
     }
 });
 
@@ -48,31 +35,16 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: (origin, callback) => {
-        const allowedOrigins = [
-            "http://localhost:5173",
-            "http://localhost:5174",
-            process.env.CLIENT_URL,
-            process.env.ADMIN_URL
-        ].filter(Boolean).map(url => url.replace(/\/$/, ""));
-
-        if (!origin) return callback(null, true);
-
-        const isAllowed = allowedOrigins.includes(origin) ||
-            origin.endsWith('.vercel.app') ||
-            origin.endsWith('.onrender.com');
-
-        if (isAllowed || process.env.NODE_ENV !== 'production') {
-            callback(null, true);
-        } else {
-            console.log("Blocked by CORS:", origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: [
+        "http://localhost:5173",  // Client app
+        "http://localhost:5174"   // Admin dashboard
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"]
 }));
 app.use(express.json());
+
+const path = require('path');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
@@ -80,6 +52,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/admin', adminAuthRoutes);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (req, res) => {
     res.send('API is running...');

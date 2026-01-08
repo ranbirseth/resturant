@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { SOCKET_URL } from '../config';
 import { 
   Plus, 
   Search, 
@@ -35,8 +36,25 @@ export default function Menu() {
     description: '',
     isVeg: true,
     available: true,
-    image: ''
+    image: null
   });
+
+  const fileInputRef = useRef(null);
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (typeof imagePath === 'string' && imagePath.startsWith('http')) return imagePath;
+    if (typeof imagePath === 'string') return `${SOCKET_URL}${imagePath}`;
+    if (imagePath instanceof File) return URL.createObjectURL(imagePath);
+    return null;
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+    }
+  };
 
   React.useEffect(() => {
     fetchItems();
@@ -88,17 +106,27 @@ export default function Menu() {
 
   const handleSave = async () => {
     try {
+      const data = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (key === 'image') {
+           if (formData[key]) data.append(key, formData[key]);
+        } else {
+           data.append(key, formData[key]);
+        }
+      });
+
       if (editingItem) {
-        const updated = await updateItem(editingItem._id, formData);
+        const updated = await updateItem(editingItem._id, data);
         setItems(items.map(item => item._id === editingItem._id ? updated : item));
       } else {
-        const created = await createItem(formData);
+        const created = await createItem(data);
         setItems([...items, created]);
       }
       setIsModalOpen(false);
       setEditingItem(null);
     } catch (error) {
       alert('Failed to save item');
+      console.error(error);
     }
   };
 
@@ -166,7 +194,7 @@ export default function Menu() {
           <Card key={item._id} className="overflow-hidden group">
             <div className="aspect-video bg-slate-100 relative">
               {item.image ? (
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                   <ImageIcon size={40} strokeWidth={1} />
@@ -225,10 +253,26 @@ export default function Menu() {
         }
       >
         <div className="space-y-4">
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:border-red-300 transition-colors cursor-pointer bg-slate-50">
-             <ImageIcon size={32} className="text-slate-400 mb-2" />
-             <p className="text-sm font-medium text-slate-600">Click to upload product image</p>
-             <p className="text-xs text-slate-400 mt-1">Max size 2MB, JPG/PNG</p>
+          <div 
+             className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:border-red-300 transition-colors cursor-pointer bg-slate-50 relative overflow-hidden"
+             onClick={() => fileInputRef.current.click()}
+          >
+             <input 
+               type="file" 
+               ref={fileInputRef} 
+               className="hidden" 
+               onChange={handleFileChange} 
+               accept="image/*"
+             />
+             {formData.image ? (
+               <img src={getImageUrl(formData.image)} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+             ) : (
+               <>
+                 <ImageIcon size={32} className="text-slate-400 mb-2" />
+                 <p className="text-sm font-medium text-slate-600">Click to upload product image</p>
+                 <p className="text-xs text-slate-400 mt-1">Max size 2MB, JPG/PNG</p>
+               </>
+             )}
           </div>
 
           <Input 
