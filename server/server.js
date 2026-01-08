@@ -17,12 +17,17 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Configure allowed origins for CORS
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    process.env.ADMIN_URL,
+    "http://localhost:5173",  // Local client
+    "http://localhost:5174"   // Local admin
+].filter(Boolean); // Remove undefined values
+
 const io = new Server(server, {
     cors: {
-        origin: [
-            "http://localhost:5173",  // Client app
-            "http://localhost:5174"   // Admin dashboard
-        ],
+        origin: allowedOrigins,
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true
     }
@@ -35,10 +40,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: [
-        "http://localhost:5173",  // Client app
-        "http://localhost:5174"   // Admin dashboard
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"]
 }));
