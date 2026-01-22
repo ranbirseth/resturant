@@ -8,8 +8,13 @@ import {
   CheckCircle2, 
   XCircle,
   Package,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  Share2,
+  Download
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import Card, { CardContent, CardHeader } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -82,6 +87,11 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Billing Modal State
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [billOrder, setBillOrder] = useState(null);
+
   const [filter, setFilter] = useState('All');
 
   React.useEffect(() => {
@@ -116,6 +126,106 @@ export default function Orders() {
     } catch (error) {
       alert('Failed to update status');
     }
+  };
+
+  const generatePdf = (order) => {
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(220, 38, 38); // Red color
+    doc.text('Zing Zaika', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text('Restaurant & Delivery', 105, 28, { align: 'center' });
+    doc.text('123 Food Street, Tasty Town', 105, 34, { align: 'center' });
+
+    // Order Details
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    doc.text(`Order ID: #${order._id.slice(-6).toUpperCase()}`, 14, 50);
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 56);
+    doc.text(`Time: ${new Date(order.createdAt).toLocaleTimeString()}`, 14, 62);
+
+    doc.text(`Customer: ${order.userId?.name || 'Guest'}`, 140, 50);
+    doc.text(`Type: ${order.orderType}`, 140, 56);
+    if (order.tableNumber) {
+        doc.text(`Table: ${order.tableNumber}`, 140, 62);
+    }
+
+    // Items Table
+    const tableColumn = ["Item", "Qty", "Price", "Amount"];
+    const tableRows = [];
+
+    order.items.forEach(item => {
+      const itemData = [
+        item.name + (item.customizations?.length ? ` (${item.customizations.join(', ')})` : ''),
+        item.quantity,
+        `Rs. ${item.price}`,
+        `Rs. ${item.price * item.quantity}`
+      ];
+      tableRows.push(itemData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 70,
+      theme: 'grid',
+      headStyles: { fillColor: [220, 38, 38] },
+    });
+
+    const finalY = doc.lastAutoTable.finalY || 70;
+
+    // Total
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Total Amount: Rs. ${order.totalAmount}`, 140, finalY + 15);
+
+    // Footer
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text('Thank you for dining with us!', 105, 280, { align: 'center' });
+
+    // Save PDF
+    const fileName = `Bill_${order._id.slice(-6).toUpperCase()}.pdf`;
+    doc.save(fileName);
+    return fileName;
+  };
+
+  const openBillModal = (order) => {
+    setBillOrder(order);
+    setIsBillModalOpen(true);
+  };
+
+  const handleSaveBill = () => {
+    if (!billOrder) return;
+    generatePdf(billOrder);
+    setIsBillModalOpen(false);
+  };
+
+  const handleShareBill = () => {
+    if (!billOrder) return;
+    const fileName = generatePdf(billOrder);
+    
+    // WhatsApp Share logic
+    if (billOrder.userId?.mobile) {
+      const message = `Hello ${billOrder.userId.name}, here is your bill for Order #${billOrder._id.slice(-6).toUpperCase()}. Total Amount: Rs. ${billOrder.totalAmount}. Thank you for choosing Zing Zaika!`;
+      const whatsappUrl = `https://wa.me/91${billOrder.userId.mobile}?text=${encodeURIComponent(message)}`;
+      
+      window.open(whatsappUrl, '_blank');
+      
+      // Simple toast/alert to guide the user
+      // using setTimeout to ensure it shows after logic execution
+      setTimeout(() => {
+         alert(`Bill downloaded! Please attach "${fileName}" to the WhatsApp chat.`);
+      }, 500);
+    } else {
+        alert('Bill downloaded! Customer mobile number not found for WhatsApp share.');
+    }
+    
+    setIsBillModalOpen(false);
   };
 
   const openOrderDetails = (order) => {
@@ -191,6 +301,14 @@ export default function Orders() {
                       onClick={() => openOrderDetails(order)}
                     >
                       <Eye size={18} />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      title="Generate Bill"
+                      onClick={() => openBillModal(order)}
+                    >
+                      <FileText size={18} className="text-red-500" />
                     </Button>
                     <div className="relative group">
                       <Button variant="ghost" size="icon">
@@ -322,6 +440,44 @@ export default function Orders() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Bill Options Modal */}
+      <Modal
+        isOpen={isBillModalOpen}
+        onClose={() => setIsBillModalOpen(false)}
+        title="Billing Options"
+        footer={
+          <Button variant="secondary" className="w-full" onClick={() => setIsBillModalOpen(false)}>Cancel</Button>
+        }
+      >
+        <div className="space-y-4 p-4">
+           <p className="text-slate-600 text-center mb-6">Choose how you want to process the bill for Order <span className="font-bold">#{billOrder?._id.slice(-6).toUpperCase()}</span></p>
+           
+           <div className="grid grid-cols-2 gap-4">
+             <button
+               onClick={handleSaveBill}
+               className="flex flex-col items-center justify-center p-6 border-2 border-slate-100 rounded-2xl hover:border-red-100 hover:bg-red-50 transition-all group"
+             >
+               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-red-100 text-slate-600 group-hover:text-red-600 transition-colors">
+                 <Download size={24} />
+               </div>
+               <span className="font-bold text-slate-800">Save PDF</span>
+               <span className="text-xs text-slate-500 mt-1">Download to device</span>
+             </button>
+
+             <button
+               onClick={handleShareBill}
+               className="flex flex-col items-center justify-center p-6 border-2 border-slate-100 rounded-2xl hover:border-green-100 hover:bg-green-50 transition-all group"
+             >
+               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-green-100 text-slate-600 group-hover:text-green-600 transition-colors">
+                 <Share2 size={24} />
+               </div>
+               <span className="font-bold text-slate-800">Share on WhatsApp</span>
+               <span className="text-xs text-slate-500 mt-1">Open chat & attach</span>
+             </button>
+           </div>
+        </div>
       </Modal>
     </div>
   );

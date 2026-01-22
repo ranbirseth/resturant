@@ -8,6 +8,7 @@ const API_BASE_URL = API_URL;
  */
 export const verifyAdminCode = async (code) => {
     try {
+        console.log('Verifying admin code at:', `${API_BASE_URL}/admin/verify-code`);
         const response = await fetch(`${API_BASE_URL}/admin/verify-code`, {
             method: 'POST',
             headers: {

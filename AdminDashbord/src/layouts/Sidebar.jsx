@@ -10,7 +10,8 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  X
+  X,
+  Receipt
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { icon: Ticket, label: 'Coupons', path: '/coupons' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: Receipt, label: 'Billing', path: 'https://billon.netlify.app/', external: true },
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -53,22 +55,38 @@ const Sidebar = ({ isOpen, onClose }) => {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {menuItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => {
-                  if (window.innerWidth < 1024) onClose();
-                }}
-                className={({ isActive }) => `
-                  flex items-center px-4 py-3 rounded-xl transition-all duration-200 group
-                  ${isActive 
-                    ? 'bg-red-50 text-red-600 font-semibold' 
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-red-500'}
-                `}
-              >
-                <item.icon className="w-5 h-5 mr-4" />
-                <span>{item.label}</span>
-              </NavLink>
+              item.external ? (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group text-slate-600 hover:bg-slate-50 hover:text-red-500"
+                  onClick={() => {
+                    if (window.innerWidth < 1024) onClose();
+                  }}
+                >
+                  <item.icon className="w-5 h-5 mr-4" />
+                  <span>{item.label}</span>
+                </a>
+              ) : (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) onClose();
+                  }}
+                  className={({ isActive }) => `
+                    flex items-center px-4 py-3 rounded-xl transition-all duration-200 group
+                    ${isActive 
+                      ? 'bg-red-50 text-red-600 font-semibold' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-red-500'}
+                  `}
+                >
+                  <item.icon className="w-5 h-5 mr-4" />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
             ))}
           </nav>
 

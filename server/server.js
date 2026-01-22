@@ -22,12 +22,15 @@ const allowedOrigins = [
     process.env.CLIENT_URL,
     process.env.ADMIN_URL,
     "http://localhost:5173",  // Local client
-    "http://localhost:5174"   // Local admin
+    "http://localhost:5174",   // Local admin
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174"
 ].filter(Boolean); // Remove undefined values
 
 const io = new Server(server, {
     cors: {
         origin: (origin, callback) => {
+            console.log('Socket Origin:', origin);
             // Allow requests with no origin (like mobile apps, Postman, etc.)
             if (!origin) return callback(null, true);
 
@@ -57,6 +60,7 @@ app.use((req, res, next) => {
 
 app.use(cors({
     origin: (origin, callback) => {
+        console.log('Request Origin:', origin);
         // Allow requests with no origin (like mobile apps, Postman, etc.)
         if (!origin) return callback(null, true);
 
