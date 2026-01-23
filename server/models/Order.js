@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    sessionId: { type: String, required: true, index: true },
     items: [
         {
             itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
@@ -18,14 +19,17 @@ const orderSchema = new mongoose.Schema({
     orderType: { type: String, enum: ['Dine-in', 'Takeaway'], required: true },
     tableNumber: { type: String }, // Required if Dine-in
     status: { type: String, enum: ['Pending', 'Preparing', 'Ready', 'Completed'], default: 'Pending' },
-    feedbackStatus: { 
-        type: String, 
-        enum: ['Pending', 'Requested', 'Submitted', 'Skipped'], 
-        default: 'Pending' 
+    feedbackStatus: {
+        type: String,
+        enum: ['Pending', 'Requested', 'Submitted', 'Skipped'],
+        default: 'Pending'
     },
     completionConfig: {
         countDownSeconds: { type: Number, default: 900 } // 15 mins default
     }
 }, { timestamps: true });
+
+// Compound index for efficient session-based queries
+orderSchema.index({ sessionId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);
