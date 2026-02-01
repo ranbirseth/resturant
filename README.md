@@ -7,7 +7,7 @@
 ## 🚀 Live Demo & Repository
 
 - **GitHub Repository**: [https://github.com/ranbirseth/resturant.git](https://github.com/yourusername/zink-zaika)
-- **Live Demo**: [Link to Live Demo] *(Add link here)*
+- **Live Demo**: [https://zink-zaika-admin.vercel.app/](https://zink-zaika-admin.vercel.app/) # password:ADMIN2024  [https://zink-zaika-client.vercel.app/login](https://zink-zaika-client.vercel.app/login)
 
 ---
 
