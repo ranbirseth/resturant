@@ -4,7 +4,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
-const upsellRoutes = require('./routes/upsellRoutes.js');
+
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const orderRoutes = require('./routes/orderRoutes');
@@ -57,7 +57,7 @@ app.use((req, res, next) => {
     req.io = io;
     next();
 });
-app.use("/api/upsell", upsellRoutes);
+
 app.use(cors({
     origin: (origin, callback) => {
         console.log('Request Origin:', origin);

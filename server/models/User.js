@@ -14,8 +14,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       match: [/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"],
     },
-     visitCount: { type: Number, default: 0 },
-  lastVisitAt: { type: Date },
   },
   { timestamps: true }
 );

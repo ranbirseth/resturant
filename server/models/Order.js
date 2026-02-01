@@ -1,29 +1,6 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-    // server/models/Order.js
-
-staffId: {
-  type: String, // or ObjectId later
-},
-
-upsellItems: [
-  {
-    itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
-    name: String,
-    price: Number
-  }
-],
-
-returnedItems: [
-  {
-    itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
-    quantity: Number,
-    reason: String
-  }
-]
-, 
-    
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     sessionId: { type: String, required: true, index: true },
     items: [

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import UpsellModal from '../components/UpsellModal';
 
 import { ArrowLeft, Star, Clock, Minus, Plus } from 'lucide-react';
 
@@ -10,6 +11,7 @@ const FoodDetails = () => {
     const { menuItems, addToCart } = useContext(AppContext);
     const [item, setItem] = useState(null);
     const [quantity, setQuantity] = useState(1);
+    const [showUpsell, setShowUpsell] = useState(false);
 
     useEffect(() => {
         const found = menuItems.find(i => i._id === id);
@@ -19,12 +21,40 @@ const FoodDetails = () => {
     if (!item) return <div className="p-10 text-center">Loading or Item not found...</div>;
 
     const handleAddToCart = () => {
-        addToCart(item, quantity);
+        // Trigger Upsell Logic
+        const excludedCategories = ['BEVERAGE', 'DESSERT', 'ICE CREAM', 'ROLLS']; 
+        if (!excludedCategories.includes(item.category.toUpperCase())) {
+          setShowUpsell(true);
+        } else {
+            addToCart(item, quantity);
+            navigate('/cart');
+        }
+    };
+
+    const handleUpsellClose = (shouldProcessOriginal = true) => {
+        setShowUpsell(false);
+        if (shouldProcessOriginal) {
+            addToCart(item, quantity);
+            navigate('/cart');
+        }
+    };
+    
+    const handleAddUpsellItem = (upsellItem) => {
+        addToCart(upsellItem); // Add the upsell item (qty 1 usually)
+        addToCart(item, quantity);     // Add the original item with selected quantity
+        setShowUpsell(false);
         navigate('/cart');
     };
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
+             {showUpsell && (
+                <UpsellModal 
+                  onClose={() => handleUpsellClose(true)} 
+                  onAddItem={handleAddUpsellItem}
+                  originalItem={item}
+                />
+             )}
              {/* Header */}
              <div className="relative h-72 w-full">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />

@@ -29,19 +29,7 @@ const itemSchema = new mongoose.Schema({
     rating: {
         type: Number,
         default: 0,
-    },
-    // server/models/Item.js
-
-costPrice: {
-  type: Number,
-  default: 0
-},
-
-stockQuantity: {
-  type: Number,
-  default: 0
-}
-
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Item', itemSchema);
