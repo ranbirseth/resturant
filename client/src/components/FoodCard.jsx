@@ -1,38 +1,40 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Star, Plus } from 'lucide-react';
 import UpsellModal from './UpsellModal';
+import { findUpsellItem } from '../utils/upsellHelper';
 
 const FoodCard = ({ item }) => {
-  const { addToCart } = useContext(AppContext);
+  const { addToCart, menuItems } = useContext(AppContext);
   const navigate = useNavigate();
   const [showUpsell, setShowUpsell] = useState(false);
+  const [targetUpsell, setTargetUpsell] = useState(null);
 
   const handleAddKey = (e) => {
     e.stopPropagation();
     
-    // Trigger Upsell Logic on almost all main items
-    // Exclude Beverage, Dessert, and things that are commonly upsells themselves to avoid loops
     const excludedCategories = ['BEVERAGE', 'DESSERT', 'ICE CREAM', 'ROLLS']; 
     const itemCat = item.category.toUpperCase();
-    
-    // Also specific check: If I am adding "Manchurian", I might want to suggest Rice.
-    // So "Main Course" should be triggered (which it is not excluded).
-    
+
     if (!excludedCategories.includes(itemCat)) {
-      setShowUpsell(true);
+        // Try to find upsell
+        const upsell = findUpsellItem(item, menuItems);
+        if (upsell) {
+            setTargetUpsell(upsell);
+            setShowUpsell(true);
+        } else {
+            addToCart(item);
+        }
     } else {
       addToCart(item);
     }
   };
 
-  const handleUpsellClose = (shouldProcessOriginal = true) => {
+  const handleUpsellClose = useCallback(() => {
     setShowUpsell(false);
-    if (shouldProcessOriginal) {
-        addToCart(item);
-    }
-  };
+    addToCart(item);
+  }, [addToCart, item]);
 
   const handleAddUpsellItem = (upsellItem) => {
     addToCart(upsellItem); // Add the upsell item
@@ -42,11 +44,11 @@ const FoodCard = ({ item }) => {
 
   return (
     <>
-      {showUpsell && (
+      {showUpsell && targetUpsell && (
         <UpsellModal 
-          onClose={() => handleUpsellClose(true)} 
+          onClose={handleUpsellClose} 
           onAddItem={handleAddUpsellItem}
-          originalItem={item}
+          upsellItem={targetUpsell}
         />
       )}
       <div 

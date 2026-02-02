@@ -2,8 +2,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import UpsellModal from '../components/UpsellModal';
-
 import { ArrowLeft, Star, Clock, Minus, Plus } from 'lucide-react';
+import { findUpsellItem } from '../utils/upsellHelper';
 
 const FoodDetails = () => {
     const { id } = useParams();
@@ -12,6 +12,7 @@ const FoodDetails = () => {
     const [item, setItem] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [showUpsell, setShowUpsell] = useState(false);
+    const [targetUpsell, setTargetUpsell] = useState(null);
 
     useEffect(() => {
         const found = menuItems.find(i => i._id === id);
@@ -21,22 +22,26 @@ const FoodDetails = () => {
     if (!item) return <div className="p-10 text-center">Loading or Item not found...</div>;
 
     const handleAddToCart = () => {
-        // Trigger Upsell Logic
         const excludedCategories = ['BEVERAGE', 'DESSERT', 'ICE CREAM', 'ROLLS']; 
         if (!excludedCategories.includes(item.category.toUpperCase())) {
-          setShowUpsell(true);
+             const upsell = findUpsellItem(item, menuItems);
+             if (upsell) {
+                setTargetUpsell(upsell);
+                setShowUpsell(true);
+             } else {
+                addToCart(item, quantity);
+                navigate('/cart');
+             }
         } else {
             addToCart(item, quantity);
             navigate('/cart');
         }
     };
 
-    const handleUpsellClose = (shouldProcessOriginal = true) => {
+    const handleUpsellClose = () => {
         setShowUpsell(false);
-        if (shouldProcessOriginal) {
-            addToCart(item, quantity);
-            navigate('/cart');
-        }
+        addToCart(item, quantity);
+        navigate('/cart');
     };
     
     const handleAddUpsellItem = (upsellItem) => {
@@ -48,11 +53,11 @@ const FoodDetails = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
-             {showUpsell && (
+             {showUpsell && targetUpsell && (
                 <UpsellModal 
-                  onClose={() => handleUpsellClose(true)} 
+                  onClose={handleUpsellClose} 
                   onAddItem={handleAddUpsellItem}
-                  originalItem={item}
+                  upsellItem={targetUpsell}
                 />
              )}
              {/* Header */}

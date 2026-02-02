@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
 
@@ -47,7 +47,7 @@ export const AppProvider = ({ children }) => {
         setLoading(false);
     };
 
-    const login = async (name, mobile) => {
+    const login = useCallback(async (name, mobile) => {
         try {
             const res = await axios.post(`${API_URL}/auth/login`, { name, mobile });
             setUser(res.data);
@@ -56,9 +56,9 @@ export const AppProvider = ({ children }) => {
             console.error("Login Error:", error);
             return false;
         }
-    };
+    }, [setUser]);
 
-    const checkUserExist = async (mobile) => {
+    const checkUserExist = useCallback(async (mobile) => {
         try {
             const res = await axios.post(`${API_URL}/auth/check`, { mobile });
             return res.data.exists;
@@ -66,9 +66,9 @@ export const AppProvider = ({ children }) => {
             console.error("Check User Error:", error);
             return false;
         }
-    };
+    }, []);
 
-    const addToCart = (item, quantity = 1, customizations = []) => {
+    const addToCart = useCallback((item, quantity = 1, customizations = []) => {
         setCart(prev => {
             // Check if same item with same customizations exists
             const existingIndex = prev.findIndex(cartItem => 
@@ -78,25 +78,25 @@ export const AppProvider = ({ children }) => {
 
             if (existingIndex > -1) {
                 const newCart = [...prev];
-                newCart[existingIndex].quantity = quantity;
+                newCart[existingIndex].quantity += quantity;
                 return newCart;
             } else {
                 return [...prev, { ...item, quantity, customizations }];
             }
         });
-    };
+    }, []);
 
-    const removeFromCart = (index) => {
+    const removeFromCart = useCallback((index) => {
         setCart(prev => prev.filter((_, i) => i !== index));
-    };
+    }, []);
     
-    const clearCart = () => setCart([]);
+    const clearCart = useCallback(() => setCart([]), []);
 
-    const getCartTotal = () => {
+    const getCartTotal = useCallback(() => {
         return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    };
+    }, [cart]);
 
-    const applyCoupon = async (code) => {
+    const applyCoupon = useCallback(async (code) => {
         try {
             const cartTotal = getCartTotal();
             const res = await axios.post(`${API_URL}/coupons/validate`, { code, cartTotal });
@@ -113,17 +113,17 @@ export const AppProvider = ({ children }) => {
             console.error("Coupon Error:", error);
             return { success: false, message: error.response?.data?.message || 'Invalid Coupon' };
         }
-    };
+    }, [getCartTotal]);
 
-    const removeCoupon = () => setCoupon(null);
+    const removeCoupon = useCallback(() => setCoupon(null), []);
 
-    const getFinalTotal = () => {
+    const getFinalTotal = useCallback(() => {
         const subTotal = getCartTotal();
         const discount = coupon ? coupon.discountAmount : 0;
         return subTotal - discount > 0 ? subTotal - discount : 0;
-    };
+    }, [getCartTotal, coupon]);
 
-    const placeOrder = async (orderData) => {
+    const placeOrder = useCallback(async (orderData) => {
         try {
             const res = await axios.post(`${API_URL}/orders`, orderData);
             clearCart();
@@ -133,9 +133,9 @@ export const AppProvider = ({ children }) => {
             console.error("Order Error:", error);
             throw error;
         }
-    };
+    }, [clearCart]);
 
-    const value = {
+    const value = React.useMemo(() => ({
         user,
         setUser,
         menuItems,
@@ -153,7 +153,7 @@ export const AppProvider = ({ children }) => {
         placeOrder,
         currentOrderId,
         loading
-    };
+    }), [user, menuItems, cart, coupon, currentOrderId, loading, addToCart, removeFromCart, clearCart, getCartTotal, applyCoupon, removeCoupon, getFinalTotal, login, checkUserExist, placeOrder]);
 
     return (
         <AppContext.Provider value={value}>
