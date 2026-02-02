@@ -9,7 +9,9 @@ import {
   ChevronRight,
   Filter,
   Check,
-  X
+  X,
+  Link,
+  Upload
 } from 'lucide-react';
 import Card, { CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -39,6 +41,7 @@ export default function Menu() {
     image: null
   });
 
+  const [imageMode, setImageMode] = useState('upload'); // 'upload' | 'url'
   const fileInputRef = useRef(null);
 
   const getImageUrl = (imagePath) => {
@@ -81,6 +84,12 @@ export default function Menu() {
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({ ...item });
+    // Determine image mode based on existing image
+    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+      setImageMode('url');
+    } else {
+      setImageMode('upload');
+    }
     setIsModalOpen(true);
   };
 
@@ -141,6 +150,7 @@ export default function Menu() {
       available: true,
       image: null
     });
+    setImageMode('upload');
     setIsModalOpen(true);
   };
 
@@ -253,27 +263,65 @@ export default function Menu() {
         }
       >
         <div className="space-y-4">
-          <div 
-             className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:border-red-300 transition-colors cursor-pointer bg-slate-50 relative overflow-hidden"
-             onClick={() => fileInputRef.current.click()}
-          >
-             <input 
-               type="file" 
-               ref={fileInputRef} 
-               className="hidden" 
-               onChange={handleFileChange} 
-               accept="image/*"
-             />
-             {formData.image ? (
-               <img src={getImageUrl(formData.image)} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
-             ) : (
-               <>
-                 <ImageIcon size={32} className="text-slate-400 mb-2" />
-                 <p className="text-sm font-medium text-slate-600">Click to upload product image</p>
-                 <p className="text-xs text-slate-400 mt-1">Max size 2MB, JPG/PNG</p>
-               </>
-             )}
+          <div className="flex items-center space-x-4 bg-slate-50 p-1 rounded-xl">
+             <button
+               className={`flex-1 flex items-center justify-center space-x-2 py-2 text-sm font-medium rounded-lg transition-all ${imageMode === 'upload' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+               onClick={() => setImageMode('upload')}
+             >
+               <Upload size={16} />
+               <span>Upload Image</span>
+             </button>
+             <button
+               className={`flex-1 flex items-center justify-center space-x-2 py-2 text-sm font-medium rounded-lg transition-all ${imageMode === 'url' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+               onClick={() => setImageMode('url')}
+             >
+               <Link size={16} />
+               <span>Image URL</span>
+             </button>
           </div>
+
+          {imageMode === 'upload' ? (
+             <div 
+               className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:border-red-300 transition-colors cursor-pointer bg-slate-50 relative overflow-hidden"
+               onClick={() => fileInputRef.current.click()}
+             >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleFileChange} 
+                  accept="image/*"
+                />
+                {formData.image && typeof formData.image !== 'string' ? (
+                  <img src={getImageUrl(formData.image)} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <ImageIcon size={32} className="text-slate-400 mb-2" />
+                    <p className="text-sm font-medium text-slate-600">Click to upload product image</p>
+                    <p className="text-xs text-slate-400 mt-1">Max size 2MB, JPG/PNG</p>
+                  </>
+                )}
+             </div>
+          ) : (
+            <div>
+               <Input
+                 label="Image URL"
+                 placeholder="https://example.com/image.jpg"
+                 value={typeof formData.image === 'string' ? formData.image : ''}
+                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+               />
+               <div className="mt-2 aspect-video bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200">
+                  {typeof formData.image === 'string' && formData.image ? (
+                     <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+                  ) : (
+                     <div className="flex flex-col items-center text-slate-400">
+                        <ImageIcon size={24} />
+                        <span className="text-xs mt-1">Preview</span>
+                     </div>
+                  )}
+               </div>
+            </div>
+          )}
 
           <Input 
             label="Item Name" 
