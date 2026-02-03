@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, Eye, EyeOff } from 'lucide-react';
 import Card, { CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -6,20 +6,40 @@ import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import Table, { TableRow, TableCell } from '../components/ui/Table';
-
-const initialCategories = [
-  { id: 1, name: 'Main Course', itemCount: 12, isVisible: true },
-  { id: 2, name: 'Starters', itemCount: 8, isVisible: true },
-  { id: 3, name: 'Breads', itemCount: 5, isVisible: true },
-  { id: 4, name: 'Beverages', itemCount: 6, isVisible: false },
-  { id: 5, name: 'Desserts', itemCount: 4, isVisible: true },
-];
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService';
+import { getItems } from '../services/itemService';
 
 export default function Categories() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [name, setName] = useState('');
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [catsData, itemsData] = await Promise.all([
+        getCategories(),
+        getItems()
+      ]);
+      setCategories(catsData);
+      setItems(itemsData);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCategoryItemCount = (categoryName) => {
+    return items.filter(item => item.category === categoryName).length;
+  };
 
   const handleEdit = (cat) => {
     setEditingCategory(cat);
@@ -27,25 +47,44 @@ export default function Categories() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (editingCategory) {
-      setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, name } : c));
-    } else {
-      setCategories([...categories, { id: Date.now(), name, itemCount: 0, isVisible: true }]);
+  const handleSave = async () => {
+    try {
+      if (editingCategory) {
+        const updated = await updateCategory(editingCategory._id, { name });
+        setCategories(categories.map(c => c._id === updated._id ? updated : c));
+      } else {
+        const created = await createCategory({ name, isVisible: true });
+        setCategories([...categories, created]);
+      }
+      setIsModalOpen(false);
+      setName('');
+      setEditingCategory(null);
+    } catch (error) {
+        alert(error.response?.data?.message || 'Failed to save category');
     }
-    setIsModalOpen(false);
-    setName('');
   };
 
-  const toggleVisibility = (id) => {
-    setCategories(categories.map(c => c.id === id ? { ...c, isVisible: !c.isVisible } : c));
+  const toggleVisibility = async (cat) => {
+    try {
+        const updated = await updateCategory(cat._id, { isVisible: !cat.isVisible });
+        setCategories(categories.map(c => c._id === updated._id ? updated : c));
+    } catch (error) {
+        alert('Failed to update visibility');
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Delete category? This might affect existing items.')) {
-      setCategories(categories.filter(c => c.id !== id));
+        try {
+            await deleteCategory(id);
+            setCategories(categories.filter(c => c._id !== id));
+        } catch (error) {
+            alert('Failed to delete category');
+        }
     }
   };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading categories...</div>;
 
   return (
     <div className="space-y-6">
@@ -64,9 +103,9 @@ export default function Categories() {
         <CardContent className="p-0">
           <Table headers={['Category Name', 'Items Count', 'Visibility', 'Actions']}>
             {categories.map((cat) => (
-              <TableRow key={cat.id}>
+              <TableRow key={cat._id}>
                 <TableCell className="font-bold text-slate-900">{cat.name}</TableCell>
-                <TableCell>{cat.itemCount} items</TableCell>
+                <TableCell>{getCategoryItemCount(cat.name)} items</TableCell>
                 <TableCell>
                   <Badge variant={cat.isVisible ? 'green' : 'gray'}>
                     {cat.isVisible ? 'Visible' : 'Hidden'}
@@ -77,16 +116,23 @@ export default function Categories() {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(cat)}>
                       <Edit2 size={16} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleVisibility(cat.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => toggleVisibility(cat)}>
                       {cat.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cat.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cat._id)}>
                       <Trash2 size={16} className="text-rose-500" />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            {categories.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                        No categories found. Add one to get started.
+                    </TableCell>
+                </TableRow>
+            )}
           </Table>
         </CardContent>
       </Card>

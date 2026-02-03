@@ -18,9 +18,8 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
+import { getCategories } from '../services/categoryService';
 import { getItems, createItem, updateItem, deleteItem } from '../services/itemService';
-
-const categories = ['All', 'Main Course', 'Starters', 'Breads', 'Beverages', 'Desserts', 'Veg', 'Non-Veg'];
 
 export default function Menu() {
   const [items, setItems] = useState([]);
@@ -29,11 +28,12 @@ export default function Menu() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [categoryList, setCategoryList] = useState([]);
   
   // Form State
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Main Course',
+    category: '',
     price: '',
     description: '',
     isVeg: true,
@@ -61,7 +61,20 @@ export default function Menu() {
 
   React.useEffect(() => {
     fetchItems();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategoryList(data);
+      if (data.length > 0) {
+        setFormData(prev => ({ ...prev, category: data[0].name }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -74,6 +87,8 @@ export default function Menu() {
       setLoading(false);
     }
   };
+
+  const filterOptions = ['All', ...categoryList.filter(c => c.isVisible).map(c => c.name)];
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -143,7 +158,7 @@ export default function Menu() {
     setEditingItem(null);
     setFormData({
       name: '',
-      category: 'Main Course',
+      category: categoryList.length > 0 ? categoryList[0].name : '',
       price: '',
       description: '',
       isVeg: true,
@@ -179,7 +194,7 @@ export default function Menu() {
           />
         </div>
         <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0">
-          {categories.map((cat) => (
+          {filterOptions.map((cat) => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
@@ -338,7 +353,7 @@ export default function Menu() {
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value})}
               >
-                {categories.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
+                {categoryList.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <Input 
