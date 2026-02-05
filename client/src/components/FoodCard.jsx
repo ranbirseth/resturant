@@ -65,17 +65,12 @@ const FoodCard = ({ item }) => {
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             {item.rating}
           </div>
-          <div className={`absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-bold text-white shadow-sm ${item.category === 'Veg' ? 'bg-green-500' : 'bg-red-500'}`}>
-            {item.category === 'Veg' ? 'VEG' : 'NON-VEG'}
-          </div>
         </div>
-        
         <div className="p-4">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-1">{item.name}</h3>
           </div>
           <p className="text-gray-500 text-sm line-clamp-2 mb-3 h-10">{item.description}</p>
-          
           <div className="flex items-center justify-between mt-2">
             <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
             <button 

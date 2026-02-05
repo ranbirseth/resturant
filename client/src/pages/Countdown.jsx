@@ -137,7 +137,7 @@ const Countdown = () => {
                     });
                     setIsReady(true);
                 }}
-                className="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg"
+                className="bg-green-700 text-white text-xs px-2 py-1 rounded shadow-lg"
              >
                 DEV: Complete Order
              </button>
