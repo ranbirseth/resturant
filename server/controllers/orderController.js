@@ -190,4 +190,150 @@ const getGroupedOrders = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getOrderById, updateOrderStatus, getOrders, getGroupedOrders };
+// @desc    Get Analytics Data
+// @route   GET /api/orders/analytics
+// @access  Admin
+const getAnalytics = async (req, res) => {
+    try {
+        const { range } = req.query; // '1d', '7d', '30d' (default)
+        const today = new Date();
+        let startDate = new Date();
+
+        // Calculate start date based on range
+        switch (range) {
+            case '1d':
+                startDate.setHours(0, 0, 0, 0); // Start of today
+                break;
+            case '7d':
+                startDate.setDate(today.getDate() - 7);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case '30d':
+            default:
+                startDate.setDate(today.getDate() - 30);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+        }
+
+        // 1. Overview Stats Aggegration
+        const stats = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: "$totalAmount" },
+                    totalOrders: { $count: {} },
+                    avgOrderValue: { $avg: "$totalAmount" }
+                }
+            }
+        ]);
+
+        // Customer Retention (Mock logic for now as user retention needs elaborate tracking)
+        // Calculating approximate repeat customers based on unique userIds vs total orders
+        // Note: Retention might be better calculated over all time, but for specific range we can stick to all time or adapt.
+        // For simplicity and to show accurate "retention in this period" requires complex logic.
+        // Keeping retention as "all time" metric for now, or we can filter orders in range.
+        // Let's keep it based on orders within range for consistency if possible, but retention is usually a cohort metric.
+        // For now, let's keep retention global or semi-global to avoid 0% on small ranges.
+        // Actually, let's filter distinct users in the range vs total orders in the range. 
+        const distinctUsersInRange = await Order.distinct('userId', { createdAt: { $gte: startDate } });
+        const totalOrdsInRange = stats[0]?.totalOrders || 0;
+
+        let retentionRate = 0;
+        if (totalOrdsInRange > 0) {
+            retentionRate = ((totalOrdsInRange - distinctUsersInRange.length) / totalOrdsInRange * 100).toFixed(1);
+        }
+
+        // 2. Revenue Graph 
+        const revenueTrend = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    revenue: { $sum: "$totalAmount" },
+                    orders: { $count: {} }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 3. Top Selling Items
+        const topItems = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate }
+                }
+            },
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.name",
+                    value: { $sum: "$items.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { value: -1 } },
+            { $limit: 5 }
+        ]);
+
+        // 4. Peak Order Times (Hourly)
+        const peakTimes = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate }
+                }
+            },
+            {
+                $project: {
+                    hour: { $hour: "$createdAt" }
+                }
+            },
+            {
+                $group: {
+                    _id: "$hour",
+                    orders: { $count: {} }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json({
+            stats: {
+                totalRevenue: stats[0]?.totalRevenue || 0,
+                totalOrders: stats[0]?.totalOrders || 0,
+                avgOrderValue: Math.round(stats[0]?.avgOrderValue || 0),
+                retentionRate: retentionRate
+            },
+            revenueTrend: revenueTrend.map(t => ({
+                date: t._id,
+                month: new Date(t._id).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+                revenue: t.revenue,
+                orders: t.orders
+            })),
+            topItems: topItems.map(i => ({
+                name: i._id,
+                value: i.value,
+                revenue: i.totalRevenue
+            })),
+            peakTimes: peakTimes.map(t => ({
+                time: `${t._id}:00`,
+                hour: t._id,
+                orders: t.orders
+            }))
+        });
+
+    } catch (error) {
+        console.error("Analytics Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { createOrder, getOrderById, updateOrderStatus, getOrders, getGroupedOrders, getAnalytics };
