@@ -94,6 +94,13 @@ const updateOrderStatus = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
+        console.log('🔄 Updating order status:', {
+            orderId: req.params.id,
+            oldStatus: order.status,
+            newStatus: status,
+            sessionId: order.sessionId
+        });
+
         // Update all orders in the same session
         const updates = {};
         if (status) updates.status = status;
@@ -109,8 +116,23 @@ const updateOrderStatus = async (req, res) => {
             .populate('userId', 'name mobile')
             .sort({ createdAt: 1 });
 
+        console.log('✅ Order(s) updated:', {
+            sessionId: order.sessionId,
+            orderCount: updatedOrders.length,
+            statuses: updatedOrders.map(o => ({ id: o._id, status: o.status }))
+        });
+
+        // Emit socket event to notify admins of status change
+        if (req.io) {
+            req.io.emit('sessionOrderUpdate', {
+                sessionId: order.sessionId,
+                orders: updatedOrders
+            });
+        }
+
         res.json(updatedOrders);
     } catch (error) {
+        console.error('❌ Error updating order status:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -148,7 +170,7 @@ const getGroupedOrders = async (req, res) => {
                     totalAmount: 0,
                     grossTotal: 0,
                     discountAmount: 0,
-                    status: 'Completed', // Will be overridden
+                    status: 'Pending', // Placeholder - will be calculated below
                     orderType: order.orderType,
                     tableNumber: order.tableNumber,
                     createdAt: order.createdAt,
@@ -161,15 +183,6 @@ const getGroupedOrders = async (req, res) => {
             grouped[sessionId].grossTotal += (order.grossTotal || order.totalAmount);
             grouped[sessionId].discountAmount += (order.discountAmount || 0);
 
-            // Determine overall status (worst status takes precedence)
-            const statusPriority = { 'Pending': 4, 'Preparing': 3, 'Ready': 2, 'Completed': 1, 'Cancelled': 0 };
-            const currentPriority = statusPriority[grouped[sessionId].status] || 0;
-            const orderPriority = statusPriority[order.status] || 0;
-
-            if (orderPriority > currentPriority) {
-                grouped[sessionId].status = order.status;
-            }
-
             // Update timestamps to reflect earliest order
             if (new Date(order.createdAt) < new Date(grouped[sessionId].createdAt)) {
                 grouped[sessionId].createdAt = order.createdAt;
@@ -177,6 +190,24 @@ const getGroupedOrders = async (req, res) => {
             if (new Date(order.updatedAt) > new Date(grouped[sessionId].updatedAt)) {
                 grouped[sessionId].updatedAt = order.updatedAt;
             }
+        });
+
+        // Calculate final status for each grouped session (after all orders are added)
+        const statusPriority = { 'Cancelled': 6, 'ChangeRequested': 5, 'Updated': 4, 'Pending': 4, 'Preparing': 3, 'Ready': 2, 'Completed': 1 };
+        Object.keys(grouped).forEach(sessionId => {
+            // First, check if there are any non-cancelled/non-completed orders
+            const activeOrders = grouped[sessionId].orders.filter(o => o.status !== 'Cancelled');
+            const ordersToConsider = activeOrders.length > 0 ? activeOrders : grouped[sessionId].orders;
+
+            let worstStatus = 'Completed';
+            ordersToConsider.forEach(order => {
+                const orderPriority = statusPriority[order.status] || 0;
+                const worstPriority = statusPriority[worstStatus] || 0;
+                if (orderPriority > worstPriority) {
+                    worstStatus = order.status;
+                }
+            });
+            grouped[sessionId].status = worstStatus;
         });
 
         // Convert to array and sort by date (most recent first)

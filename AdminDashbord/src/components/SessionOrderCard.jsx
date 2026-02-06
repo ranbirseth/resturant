@@ -9,7 +9,9 @@ const statusVariants = {
   'Preparing': 'blue',
   'Ready': 'indigo',
   'Completed': 'green',
-  'Cancelled': 'red'
+  'Cancelled': 'red',
+  'ChangeRequested': 'yellow',
+  'Updated': 'orange',
 };
 
 /**
@@ -65,7 +67,7 @@ export default function SessionOrderCard({ sessionData, onStatusUpdate, onViewBi
         <div className="p-4 border-b border-slate-100">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-red-50 to-orange-50 flex items-center justify-center">
                 <User className="text-red-600" size={24} />
               </div>
               <div>
@@ -84,7 +86,9 @@ export default function SessionOrderCard({ sessionData, onStatusUpdate, onViewBi
                 </div>
               </div>
             </div>
-            <Badge variant={statusVariants[status]}>{status}</Badge>
+            <Badge variant={statusVariants[status]}>
+              {status === 'ChangeRequested' ? 'Change Requested' : status === 'Updated' ? 'Order Updated' : status}
+            </Badge>
           </div>
 
           {/* Order Info */}
@@ -187,6 +191,15 @@ export default function SessionOrderCard({ sessionData, onStatusUpdate, onViewBi
               >
                 Complete Order
               </Button>
+            )}
+            {status === 'Cancelled' && (
+              <span className="flex-1 text-center text-red-500 font-semibold">Order Cancelled</span>
+            )}
+            {status === 'ChangeRequested' && (
+              <span className="flex-1 text-center text-yellow-600 font-semibold">Change Requested by User</span>
+            )}
+            {status === 'Updated' && (
+              <span className="flex-1 text-center text-orange-500 font-semibold">Order Updated</span>
             )}
             <Button
               variant="secondary"

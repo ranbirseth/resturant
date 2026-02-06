@@ -28,7 +28,9 @@ const statusVariants = {
   'Preparing': 'blue',
   'Ready': 'indigo',
   'Completed': 'green',
-  'Cancelled': 'red'
+  'Cancelled': 'red',
+  'ChangeRequested': 'yellow',
+  'Updated': 'orange',
 };
 
 export default function Orders() {
@@ -64,10 +66,22 @@ export default function Orders() {
       const grossTotal = orders.reduce((sum, o) => sum + (o.grossTotal || o.totalAmount), 0);
       const discountAmount = orders.reduce((sum, o) => sum + (o.discountAmount || 0), 0);
       
-      // Determine status (worst status takes precedence)
-      const statusPriority = { 'Pending': 4, 'Preparing': 3, 'Ready': 2, 'Completed': 1, 'Cancelled': 0 };
+      // Determine status (priority: ChangeRequested > Updated > Pending > Preparing > Ready > Completed, but skip Cancelled if there are active orders)
+      const statusPriority = {
+        'Cancelled': 6,
+        'ChangeRequested': 5,
+        'Updated': 4,
+        'Pending': 4,
+        'Preparing': 3,
+        'Ready': 2,
+        'Completed': 1
+      };
+      // Filter out cancelled orders if there are any active orders
+      const activeOrders = orders.filter(o => o.status !== 'Cancelled');
+      const ordersToConsider = activeOrders.length > 0 ? activeOrders : orders;
+
       let worstStatus = 'Completed';
-      orders.forEach(order => {
+      ordersToConsider.forEach(order => {
         if (statusPriority[order.status] > statusPriority[worstStatus]) {
           worstStatus = order.status;
         }
@@ -147,27 +161,48 @@ export default function Orders() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       const updatedOrders = await updateOrderStatus(orderId, { status: newStatus });
-      
+
       // Update the session in state
       if (Array.isArray(updatedOrders) && updatedOrders.length > 0) {
         const sessionId = updatedOrders[0].sessionId;
-        
+
+        // Calculate the grouped status using priority logic
+        const statusPriority = {
+          'Cancelled': 6,
+          'ChangeRequested': 5,
+          'Updated': 4,
+          'Pending': 4,
+          'Preparing': 3,
+          'Ready': 2,
+          'Completed': 1
+        };
+        // Filter out cancelled orders if there are any active orders
+        const activeOrders = updatedOrders.filter(o => o.status !== 'Cancelled');
+        const ordersToConsider = activeOrders.length > 0 ? activeOrders : updatedOrders;
+
+        let worstStatus = 'Completed';
+        ordersToConsider.forEach(order => {
+          if (statusPriority[order.status] > statusPriority[worstStatus]) {
+            worstStatus = order.status;
+          }
+        });
+
         setGroupedOrders(prev => prev.map(session => {
           if (session.sessionId === sessionId) {
             return {
               ...session,
               orders: updatedOrders,
-              status: newStatus
+              status: worstStatus
             };
           }
           return session;
         }));
-        
+
         if (selectedSession?.sessionId === sessionId) {
           setSelectedSession({
             ...selectedSession,
             orders: updatedOrders,
-            status: newStatus
+            status: worstStatus
           });
         }
       }
@@ -327,7 +362,7 @@ export default function Orders() {
       <Card>
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-2 overflow-x-auto">
-            {['All', 'Pending', 'Preparing', 'Ready', 'Completed'].map((s) => (
+            {['All', 'Pending', 'Preparing', 'Ready', 'Completed', 'Cancelled', 'ChangeRequested', 'Updated'].map((s) => (
               <button
                 key={s}
                 onClick={() => setFilter(s)}
@@ -407,7 +442,9 @@ export default function Orders() {
                   </p>
                 </div>
               </div>
-              <Badge variant={statusVariants[selectedSession.status]}>{selectedSession.status}</Badge>
+              <Badge variant={statusVariants[selectedSession.status]}>
+                {selectedSession.status === 'ChangeRequested' ? 'Change Requested' : selectedSession.status === 'Updated' ? 'Order Updated' : selectedSession.status}
+              </Badge>
             </div>
 
             <div className="space-y-4">
@@ -471,7 +508,7 @@ export default function Orders() {
                 </>
               )}
               <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-                <span className="text-sm font-bold text-slate-800 text-lg">Session Total</span>
+                <span className="text-lg font-bold text-slate-800">Session Total</span>
                 <span className="text-xl font-bold text-red-600">₹{selectedSession.totalAmount}</span>
               </div>
             </div>
