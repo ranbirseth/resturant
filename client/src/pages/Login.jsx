@@ -7,17 +7,14 @@ const Login = () => {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [error, setError] = useState("");
-  const [isNewUser, setIsNewUser] = useState(null); // null, true, false
-
-  const { login, checkUserExist } = useContext(AppContext);
+  const { login, checkUserExist, newUser, setNewUser } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleMobileBlur = async () => {
     if (mobile.length === 10) {
-        const exists = await checkUserExist(mobile);
-        setIsNewUser(!exists);
+        await checkUserExist(mobile);
     } else {
-        setIsNewUser(null);
+        setNewUser(null);
     }
   };
 
@@ -83,21 +80,21 @@ const Login = () => {
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
               onBlur={handleMobileBlur}
-              className={`mt-1 w-full px-4 py-3 rounded-xl bg-gray-50 border focus:outline-none transition-all ${
-                  isNewUser === true ? 'border-green-400 focus:ring-2 focus:ring-green-200' : 
-                  isNewUser === false ? 'border-amber-200 focus:ring-2 focus:ring-amber-400' :
+                className={`mt-1 w-full px-4 py-3 rounded-xl bg-gray-50 border focus:outline-none transition-all ${
+                  newUser === true ? 'border-green-400 focus:ring-2 focus:ring-green-200' : 
+                  newUser === false ? 'border-amber-200 focus:ring-2 focus:ring-amber-400' :
                   'border-gray-200 focus:ring-2 focus:ring-amber-400'
-              }`}
+                }`}
             />
-            {isNewUser === true && (
-                <div className="mt-2 text-sm text-green-600 font-bold bg-green-50 p-2 rounded-lg animate-bounce">
-                    🎉 First time? Use 'WELCOME10' for 10% OFF!
-                </div>
+            {newUser === true && (
+              <div className="mt-2 text-sm text-green-600 font-bold bg-green-50 p-2 rounded-lg animate-bounce">
+                🎉 You are a new user!
+              </div>
             )}
-            {isNewUser === false && (
-                <p className="mt-2 text-sm text-gray-500">
-                    Welcome back, foodie! 🍕
-                </p>
+            {newUser === false && (
+              <p className="mt-2 text-sm text-gray-500">
+                Welcome back, foodie! 🍕
+              </p>
             )}
           </div>
 

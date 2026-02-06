@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
     const [coupon, setCoupon] = useState(null); // { code, discountType, value, discountAmount }
     const [loading, setLoading] = useState(false);
     const [currentOrderId, setCurrentOrderId] = useState(localStorage.getItem('currentOrderId') || null);
+    const [newUser, setNewUser] = useState(null); // null, true, false
 
     useEffect(() => {
         if (currentOrderId) {
@@ -61,9 +62,11 @@ export const AppProvider = ({ children }) => {
     const checkUserExist = useCallback(async (mobile) => {
         try {
             const res = await axios.post(`${API_URL}/auth/check`, { mobile });
+            setNewUser(!res.data.exists);
             return res.data.exists;
         } catch (error) {
             console.error("Check User Error:", error);
+            setNewUser(null);
             return false;
         }
     }, []);
@@ -152,8 +155,10 @@ export const AppProvider = ({ children }) => {
         checkUserExist,
         placeOrder,
         currentOrderId,
-        loading
-    }), [user, menuItems, cart, coupon, currentOrderId, loading, addToCart, removeFromCart, clearCart, getCartTotal, applyCoupon, removeCoupon, getFinalTotal, login, checkUserExist, placeOrder]);
+        loading,
+        newUser,
+        setNewUser
+    }), [user, menuItems, cart, coupon, currentOrderId, loading, addToCart, removeFromCart, clearCart, getCartTotal, applyCoupon, removeCoupon, getFinalTotal, login, checkUserExist, placeOrder, newUser]);
 
     return (
         <AppContext.Provider value={value}>
