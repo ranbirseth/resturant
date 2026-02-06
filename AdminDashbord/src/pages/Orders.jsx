@@ -87,6 +87,18 @@ export default function Orders() {
         }
       });
 
+      // Determine session orderType and tableNumber (prioritize Dine-in)
+      let sessionOrderType = orders[0]?.orderType;
+      let sessionTableNumber = orders[0]?.tableNumber;
+
+      const dineInOrder = orders.find(o => o.orderType === 'Dine-in');
+      if (dineInOrder) {
+        sessionOrderType = 'Dine-in';
+        if (dineInOrder.tableNumber) {
+          sessionTableNumber = dineInOrder.tableNumber;
+        }
+      }
+
       const groupedSession = {
         sessionId,
         userId: orders[0]?.userId,
@@ -95,8 +107,8 @@ export default function Orders() {
         grossTotal,
         discountAmount,
         status: worstStatus,
-        orderType: orders[0]?.orderType,
-        tableNumber: orders[0]?.tableNumber,
+        orderType: sessionOrderType,
+        tableNumber: sessionTableNumber,
         createdAt: orders[0]?.createdAt,
         updatedAt: orders[orders.length - 1]?.updatedAt
       };
@@ -455,11 +467,25 @@ export default function Orders() {
               
               {selectedSession.orders.map((order, orderIdx) => (
                 <div key={order._id} className="border border-slate-200 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-3">
+                  <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-bold text-slate-600">
                       Order #{orderIdx + 1} • {new Date(order.createdAt).toLocaleTimeString()}
                     </span>
                     <span className="text-sm font-semibold text-slate-900">₹{order.totalAmount}</span>
+                  </div>
+
+                  {/* Order Type and Table Info */}
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <Package size={10} className="mr-1" />
+                      {order.orderType}
+                    </div>
+                    {order.tableNumber && (
+                      <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-red-500">
+                        <Grid3x3 size={10} className="mr-1" />
+                        Table {order.tableNumber}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">

@@ -7,6 +7,8 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
     const [menuItems, setMenuItems] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const [cart, setCart] = useState([]);
     const [coupon, setCoupon] = useState(null); // { code, discountType, value, discountAmount }
     const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export const AppProvider = ({ children }) => {
 
     useEffect(() => {
         fetchMenuItems();
-        // Load cart from local storage? Optional.
+        fetchCategories();
     }, []);
 
     useEffect(() => {
@@ -36,8 +38,6 @@ export const AppProvider = ({ children }) => {
             const res = await axios.get(`${API_URL}/items`);
             setMenuItems(res.data);
             if (res.data.length === 0) {
-                 // Auto seed if empty? Or just let it be empty.
-                 // let's try to seed if empty for demo purposes
                  await axios.post(`${API_URL}/items/seed`);
                  const seeded = await axios.get(`${API_URL}/items`);
                  setMenuItems(seeded.data);
@@ -46,6 +46,15 @@ export const AppProvider = ({ children }) => {
             console.error("Error fetching menu:", error);
         }
         setLoading(false);
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const res = await axios.get(`${API_URL}/categories`);
+            setCategories(res.data);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
     };
 
     const login = useCallback(async (name, mobile) => {
@@ -142,6 +151,9 @@ export const AppProvider = ({ children }) => {
         user,
         setUser,
         menuItems,
+        categories,
+        selectedCategory,
+        setSelectedCategory,
         cart,
         addToCart,
         removeFromCart,
@@ -158,7 +170,7 @@ export const AppProvider = ({ children }) => {
         loading,
         newUser,
         setNewUser
-    }), [user, menuItems, cart, coupon, currentOrderId, loading, addToCart, removeFromCart, clearCart, getCartTotal, applyCoupon, removeCoupon, getFinalTotal, login, checkUserExist, placeOrder, newUser]);
+    }), [user, menuItems, categories, selectedCategory, setSelectedCategory, cart, coupon, currentOrderId, loading, addToCart, removeFromCart, clearCart, getCartTotal, applyCoupon, removeCoupon, getFinalTotal, login, checkUserExist, placeOrder, newUser]);
 
     return (
         <AppContext.Provider value={value}>

@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   X,
-  Receipt
+  Receipt,
+  Star
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { icon: Users, label: 'Users', path: '/users' },
   { icon: Ticket, label: 'Coupons', path: '/coupons' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+  { icon: Star, label: 'Reviews', path: '/reviews' },
   { icon: Settings, label: 'Settings', path: '/settings' },
   { icon: Receipt, label: 'Billing', path: 'https://billon.netlify.app/', external: true },
 ];

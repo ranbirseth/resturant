@@ -33,6 +33,22 @@ const submitFeedback = async (req, res) => {
     }
 };
 
+// @desc    Get all feedback
+// @route   GET /api/feedback
+// @access  Private/Admin
+const getFeedbacks = async (req, res) => {
+    try {
+        const feedbacks = await Feedback.find()
+            .populate('orderId', 'tableNumber orderType items status')
+            .populate('userId', 'name mobile')
+            .sort({ createdAt: -1 });
+        res.json(feedbacks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 router.post('/', submitFeedback);
+router.get('/', getFeedbacks);
 
 module.exports = router;

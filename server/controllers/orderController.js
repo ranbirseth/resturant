@@ -183,6 +183,14 @@ const getGroupedOrders = async (req, res) => {
             grouped[sessionId].grossTotal += (order.grossTotal || order.totalAmount);
             grouped[sessionId].discountAmount += (order.discountAmount || 0);
 
+            // Prioritize Dine-in info for the session display
+            if (order.orderType === 'Dine-in') {
+                grouped[sessionId].orderType = 'Dine-in';
+                if (order.tableNumber) {
+                    grouped[sessionId].tableNumber = order.tableNumber;
+                }
+            }
+
             // Update timestamps to reflect earliest order
             if (new Date(order.createdAt) < new Date(grouped[sessionId].createdAt)) {
                 grouped[sessionId].createdAt = order.createdAt;

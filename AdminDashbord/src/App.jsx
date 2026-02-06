@@ -11,6 +11,7 @@ import Coupons from './pages/Coupons';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import AdminAuth from './components/AdminAuth';
+import Reviews from './pages/Reviews';
 import { useAdminAuth } from './hooks/useAdminAuth';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="coupons" element={<Coupons />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="reviews" element={<Reviews />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
