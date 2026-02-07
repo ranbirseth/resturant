@@ -10,7 +10,8 @@ export default {
                 primary: {
                     DEFAULT: '#ef4444', // Adjust to match Zink Zaika branding if known, else standard vibrant red
                     foreground: '#ffffff',
-                }
+                },
+                'primary-billing': '#f97316',
             }
         },
     },

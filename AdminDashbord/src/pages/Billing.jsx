@@ -1,0 +1,46 @@
+import React, { useState } from 'react';
+import BillingScreen from '../components/billing/BillingScreen';
+import MenuList from '../components/billing/MenuList';
+import { LayoutDashboard, Utensils } from 'lucide-react';
+
+export default function Billing() {
+  const [currentView, setCurrentView] = useState('billing');
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-2rem)] overflow-hidden bg-white rounded-3xl shadow-sm border border-slate-100 font-sans">
+      {/* Internal Navigation for Billing App */}
+      <nav className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md z-10 rounded-t-3xl">
+        <div className="flex items-center gap-2">
+          <div className="bg-primary-billing p-2 rounded-lg">
+            <Utensils size={20} className="text-white" />
+          </div>
+          <span className="font-black text-xl tracking-tighter">POS SYSTEM</span>
+        </div>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setCurrentView('billing')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-black text-xs tracking-widest uppercase ${
+              currentView === 'billing' ? 'bg-primary-billing text-white shadow-lg' : 'hover:bg-gray-800 text-slate-400'
+            }`}
+          >
+            <LayoutDashboard size={14} />
+            Billing
+          </button>
+          <button 
+            onClick={() => setCurrentView('menu')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-black text-xs tracking-widest uppercase ${
+              currentView === 'menu' ? 'bg-primary-billing text-white shadow-lg' : 'hover:bg-gray-800 text-slate-400'
+            }`}
+          >
+            <Utensils size={14} />
+            Inventory
+          </button>
+        </div>
+      </nav>
+
+      <main className="flex-1 overflow-hidden bg-slate-50">
+        {currentView === 'billing' ? <BillingScreen /> : <MenuList />}
+      </main>
+    </div>
+  );
+}

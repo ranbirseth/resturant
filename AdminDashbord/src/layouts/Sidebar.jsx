@@ -25,7 +25,7 @@ const menuItems = [
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Star, label: 'Reviews', path: '/reviews' },
   { icon: Settings, label: 'Settings', path: '/settings' },
-  { icon: Receipt, label: 'Billing', path: 'https://billon.netlify.app/', external: true },
+  { icon: Receipt, label: 'Billing', path: '/billing' },
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {
