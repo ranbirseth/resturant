@@ -102,10 +102,13 @@ const MenuList = () => {
           </div>
           <button 
             onClick={() => setShowForm(true)}
-            className="bg-primary-billing hover:bg-orange-600 text-white font-black px-6 py-4 rounded-xl shadow-lg shadow-orange-100 transition-all flex items-center gap-2 group"
+            className="relative group overflow-hidden rounded-xl shadow-lg shadow-orange-100"
           >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-            ADD NEW ITEM
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:scale-105 transition-transform duration-300" />
+            <div className="relative px-6 py-4 flex items-center gap-2 text-white font-black">
+              <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+              ADD NEW ITEM
+            </div>
           </button>
         </div>
 
@@ -117,7 +120,7 @@ const MenuList = () => {
               <input 
                 type="text" 
                 placeholder="Search menu items..." 
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl border border-transparent focus:border-primary-billing focus:bg-white transition-all outline-none font-medium text-sm"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl border border-transparent focus:border-orange-500 focus:ring-4 focus:ring-orange-100 focus:bg-white transition-all outline-none font-medium text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -151,15 +154,16 @@ const MenuList = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filteredItems.map(item => (
-                    <tr key={item._id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-8 py-6">
-                        <span className="font-bold text-gray-800 text-lg">{item.name}</span>
+                    <tr key={item._id} className="hover:bg-orange-50/30 transition-all group relative">
+                      <td className="px-8 py-6 relative">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 scale-y-0 group-hover:scale-y-100 transition-transform origin-center" />
+                        <span className="font-bold text-gray-800 text-lg group-hover:text-orange-700 transition-colors uppercase tracking-tight">{item.name}</span>
                       </td>
                       <td className="px-8 py-6">
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider">{item.category}</span>
+                        <span className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">{item.category}</span>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <span className="font-black text-gray-900 text-lg">₹{item.price}</span>
+                        <span className="font-black text-gray-900 text-lg group-hover:scale-110 transition-transform inline-block">₹{item.price}</span>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex justify-center">
@@ -167,8 +171,8 @@ const MenuList = () => {
                             onClick={() => handleToggle(item._id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
                               item.isAvailable 
-                              ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' 
-                              : 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
+                              ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-500 hover:text-white hover:shadow-lg hover:shadow-green-100' 
+                              : 'bg-red-50 text-red-600 border-red-100 hover:bg-red-500 hover:text-white hover:shadow-lg hover:shadow-red-100'
                             }`}
                           >
                             {item.isAvailable ? (
@@ -183,14 +187,14 @@ const MenuList = () => {
                         <div className="flex justify-center gap-3">
                           <button 
                             onClick={() => { setEditingItem(item); setShowForm(true); }}
-                            className="p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm shadow-blue-50 border border-blue-100"
+                            className="p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm shadow-blue-50 border border-blue-100 hover:-translate-y-1 active:translate-y-0"
                             title="Edit"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button 
                             onClick={() => handleDelete(item._id)}
-                            className="p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm shadow-red-50 border border-red-100"
+                            className="p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm shadow-red-50 border border-red-100 hover:-translate-y-1 active:translate-y-0"
                             title="Delete"
                           >
                             <Trash2 size={18} />

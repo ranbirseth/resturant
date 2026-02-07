@@ -29,6 +29,10 @@ const itemSchema = new mongoose.Schema({
     rating: {
         type: Number,
         default: 0,
+    },
+    available: {
+        type: Boolean,
+        default: true,
     }
 }, { timestamps: true });
 

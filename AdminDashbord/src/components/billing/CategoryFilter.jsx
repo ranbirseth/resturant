@@ -15,13 +15,16 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         <button
           onClick={() => onCategoryChange(null)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm ${
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 font-bold text-sm relative group overflow-hidden ${
             activeCategory === null 
-            ? 'bg-primary-billing text-white shadow-lg shadow-orange-100' 
-            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+            ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' 
+            : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600 hover:pl-6'
           }`}
         >
-          <div className={`w-2 h-2 rounded-full ${activeCategory === null ? 'bg-white' : 'bg-gray-200'}`} />
+          {activeCategory === null && (
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white rounded-r-full" />
+          )}
+          <div className={`w-2 h-2 rounded-full transition-all duration-300 ${activeCategory === null ? 'bg-white scale-125' : 'bg-gray-200 group-hover:bg-orange-400 group-hover:scale-125'}`} />
           All Items
         </button>
 
@@ -29,13 +32,16 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => {
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm text-left ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 font-bold text-sm text-left relative group overflow-hidden ${
               activeCategory === cat 
-              ? 'bg-primary-billing text-white shadow-lg shadow-orange-100' 
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' 
+              : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600 hover:pl-6'
             }`}
           >
-             <div className={`w-2 h-2 rounded-full ${activeCategory === cat ? 'bg-white' : 'bg-gray-200'}`} />
+             {activeCategory === cat && (
+               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-white rounded-r-full" />
+             )}
+             <div className={`w-2 h-2 rounded-full transition-all duration-300 ${activeCategory === cat ? 'bg-white scale-125' : 'bg-gray-200 group-hover:bg-orange-400 group-hover:scale-125'}`} />
              {cat}
           </button>
         ))}

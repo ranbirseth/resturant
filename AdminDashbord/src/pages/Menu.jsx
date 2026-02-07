@@ -279,13 +279,13 @@ export default function Menu() {
       >
         <div className="space-y-4">
           <div className="flex items-center space-x-4 bg-slate-50 p-1 rounded-xl">
-             <button
+             {/* <button
                className={`flex-1 flex items-center justify-center space-x-2 py-2 text-sm font-medium rounded-lg transition-all ${imageMode === 'upload' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                onClick={() => setImageMode('upload')}
              >
                <Upload size={16} />
                <span>Upload Image</span>
-             </button>
+             </button> */}
              <button
                className={`flex-1 flex items-center justify-center space-x-2 py-2 text-sm font-medium rounded-lg transition-all ${imageMode === 'url' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                onClick={() => setImageMode('url')}

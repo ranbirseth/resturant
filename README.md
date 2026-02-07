@@ -1,280 +1,218 @@
-# Zink Zaika - Restaurant Management System
 
-**Zink Zaika** is a comprehensive, full-stack web application designed to streamline restaurant operations. It features a modern, responsive customer-facing ordering platform and a powerful admin dashboard for real-time management of orders, menus, and users.
+# Zink Zaika – Advanced Restaurant Management System
+
+Zink Zaika is a full-stack, production-ready restaurant management platform. It features a modern, mobile-first customer ordering app and a powerful real-time admin dashboard, both built with React and Vite, and a robust Node.js/Express backend with MongoDB. The system is designed for seamless restaurant operations, real-time order management, and analytics.
 
 ---
 
-## 🚀 Live Demo & Repository
+## 🌟 Key Features & Architecture
 
-- **GitHub Repository**: [https://github.com/ranbirseth/resturant.git](https://github.com/yourusername/zink-zaika)
-- **Live Demo**: [https://zink-zaika-admin.vercel.app/](https://zink-zaika-admin.vercel.app/) # password:ADMIN2024  [https://zink-zaika-client.vercel.app/login](https://zink-zaika-client.vercel.app/login)
+### 1. Customer Application (Client)
+
+- **Interactive Menu & Search**
+	- Browse food items by category, with instant search and filtering.
+	- Menu data is fetched from the backend and cached for performance.
+
+- **Cart & Order Customization**
+	- Add/remove items, adjust quantities, and customize orders.
+	- Cart state is managed via React Context for persistence across navigation.
+
+- **Order Placement & Real-Time Status**
+	- Place dine-in or takeaway orders.
+	- Order status updates in real-time (Pending → Preparing → Ready) via Socket.IO.
+
+- **Coupon System**
+	- Apply discount codes at checkout.
+	- Coupon validation is handled server-side for security.
+
+- **Upsell Modal**
+	- Intelligent upsell suggestions based on cart contents, using backend rules.
+
+- **User Authentication**
+	- Phone number-based login; new users are auto-registered.
+
+---
+
+### 2. Admin Dashboard
+
+- **Authentication**
+	- Secured with a secret admin code (from environment variables).
+	- Session persists via local storage and context.
+
+- **Real-Time Order Management**
+	- Live order feed with instant notifications for new/updated orders (Socket.IO).
+	- Update order status, view order details, and manage sessions.
+
+- **Menu & Category Management**
+	- Add, edit, or delete menu items and categories.
+	- Menu changes are reflected instantly for all users.
+
+- **User & Coupon Management**
+	- View all registered users and their order history.
+	- Create, edit, and delete coupons with usage tracking.
+
+- **Analytics & Reporting**
+	- Visual dashboards (Recharts) for sales, order trends, and category performance.
+	- Exportable reports (future roadmap).
+
+- **Session Grouping**
+	- Orders are grouped by session for easier management during busy hours.
+
+---
+
+### 3. Backend (Server)
+
+- **RESTful API**
+	- Modular Express routes for auth, admin, items, orders, coupons, feedback, and upsell logic.
+	- Centralized error handling and validation.
+
+- **Database**
+	- MongoDB with Mongoose ODM.
+	- Models for User, Order, Item, Category, Coupon, Feedback.
+
+- **Real-Time Communication**
+	- Socket.IO for instant updates between client, admin, and kitchen.
+
+- **Security**
+	- Environment-based secrets, CORS configuration, and input validation.
+
+- **Extensible Architecture**
+	- Easily add new features (e.g., payment gateways, advanced analytics).
+
+---
+
+## 🗂️ Project Structure
+
+```
+Zink_zaika/
+├── client/           # Customer React app (Vite, Tailwind, Context)
+├── AdminDashbord/    # Admin React app (Vite, Tailwind, Recharts, Socket.IO)
+├── server/           # Node.js/Express backend (MongoDB, Socket.IO)
+└── README.md         # This file
+```
+
+---
+
+## ⚙️ How It Works
+
+### Data Flow
+
+1. **Menu & Orders**
+	 - Menu data is fetched from the backend and displayed in both client and admin apps.
+	 - Orders placed by customers are sent to the backend, stored in MongoDB, and broadcast to the admin dashboard in real-time.
+
+2. **Order Status**
+	 - Admin updates order status (e.g., Preparing, Ready).
+	 - Status changes are pushed to the customer app instantly via Socket.IO.
+
+3. **Coupons & Upsell**
+	 - Coupons are validated server-side.
+	 - Upsell suggestions are generated using backend rules and shown in the client app.
+
+4. **Analytics**
+	 - Sales and order data are aggregated and visualized in the admin dashboard.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend (Client & Admin)
-- **Framework**: React.js (Vite)
-- **Styling**: Tailwind CSS, Lucide React (Icons)
-- **State Management**: React Hooks (Context API)
-- **Routing**: React Router DOM
-- **Real-time Communication**: Socket.IO Client
-- **Charts**: Recharts (Admin Dashboard)
-- **Animations**: Framer Motion
-
-### Backend (Server)
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB (Mongoose ODM)
-- **Real-time Communication**: Socket.IO
-- **Environment Management**: Dotenv
-- **CORS**: Cross-Origin Resource Sharing
+- **Frontend:** React.js (Vite), Tailwind CSS, Recharts, Framer Motion, Lucide React, Socket.IO Client
+- **Backend:** Node.js, Express.js, MongoDB (Mongoose), Socket.IO, Dotenv, CORS
+- **Dev Tools:** ESLint, Prettier, Nodemon, Vercel (deployment)
 
 ---
 
-## ✨ Features
-
-### 🍽️ Customer Application (Client)
-- **Interactive Menu**: Browse food items by category with search functionality.
-- **Cart Management**: Add/remove items, customize quantity, and view total cost.
-- **Order Placement**: Simple checkout process with dine-in or takeaway options.
-- **Real-time Order Status**: Track order progress (Pending -> Preparing -> Ready).
-- **Coupons**: Apply discount codes during checkout.
-
-### ⚡ Admin Dashboard
-- **Real-time Notifications**: Instant alerts for new orders via Socket.IO.
-- **Order Management**: View, update status, and manage incoming orders.
-- **Menu Management**: Add, edit, or delete food items and categories.
-- **User Management**: View registered users and order history.
-- **Coupon System**: Create and manage discount codes.
-- **Analytics**: Visual insights into sales and order trends.
-
----
-
-## 📂 Folder Structure
-
-```
-Zink_zaika/
-├── client/                 # Customer-facing React Application
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── AdminDashbord/          # Admin Control Panel React Application
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── server/                 # Node.js Express Backend
-│   ├── config/             # Database connection
-│   ├── controllers/        # Route logic
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # API endpoints
-│   ├── server.js           # Entry point
-│   └── package.json
-│
-└── README.md
-```
-
----
-
-## ⚙️ Installation & Setup
-
-Follow these steps to set up the project locally.
+## 🚀 Setup & Installation
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB (Local or Atlas URI)
+
+- Node.js v14+
+- MongoDB (local or Atlas)
 - Git
 
 ### 1. Clone the Repository
+
 ```bash
-git clone https://github.com/yourusername/zink-zaika.git
-cd Zink_zaika
+git clone https://github.com/ranbirseth/resturant.git
+cd resturant
 ```
 
-### 2. Backend Setup (Server)
-Navigate to the server directory and install dependencies:
+### 2. Backend Setup
+
 ```bash
 cd server
 npm install
-```
-
-Create a `.env` file in the `server` directory with the following variables:
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/zink_zaika
-ADMIN_SECRET_CODE=ADMIN2024
-```
-
-Start the server:
-```bash
+# Configure .env (see .env.example)
 npm run dev
-# Server will run on http://localhost:5000
+# Runs on http://localhost:5000
 ```
 
-### 3. Admin Dashboard Setup
-Open a new terminal, navigate to the admin directory, and install dependencies:
+### 3. Admin Dashboard
+
 ```bash
 cd AdminDashbord
 npm install
-```
-
-Start the Admin Dashboard:
-```bash
 npm run dev
-# Dashboard will run on http://localhost:5174 (default Vite port)
+# Runs on http://localhost:5174
 ```
 
-### 4. Client Application Setup
-Open a new terminal, navigate to the client directory, and install dependencies:
+### 4. Client App
+
 ```bash
 cd client
 npm install
-```
-
-Start the Client App:
-```bash
 npm run dev
-# Client will run on http://localhost:5173 (default Vite port)
+# Runs on http://localhost:5173
 ```
 
 ---
 
-### 5. Dependency Installation Commands
+## 🔌 API Endpoints
 
-#### 🔧 Backend (Server)
-Navigate to the server directory:
-```bash
-cd server
-```
-
-Install production dependencies:
-```bash
-npm install express mongoose dotenv cors socket.io
-```
-
-Install development dependencies:
-```bash
-npm install --save-dev nodemon
-```
-
-**Or simply (recommended):**
-```bash
-npm install
-```
+- `/api/auth` – User login/registration
+- `/api/admin` – Admin verification
+- `/api/items` – Menu CRUD
+- `/api/orders` – Order management
+- `/api/coupons` – Coupon validation/management
+- `/api/feedback` – Customer feedback
+- `/api/upsell` – Upsell logic
 
 ---
 
-#### 🖥️ Client Application (User Side)
-Navigate to the client directory:
-```bash
-cd client
-```
+## 🔐 Authentication
 
-Install dependencies:
-```bash
-npm install react react-dom react-router-dom axios lucide-react
-```
-
-Install development dependencies:
-```bash
-npm install --save-dev vite @vitejs/plugin-react tailwindcss postcss autoprefixer eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-react-refresh @types/react @types/react-dom
-```
-
-**Or simply:**
-```bash
-npm install
-```
+- **Users:** Phone number login, auto-registration.
+- **Admins:** Secret code (set in `.env` as `ADMIN_SECRET_CODE`).
 
 ---
 
-#### 🧑‍💼 Admin Dashboard
-Navigate to the admin directory:
-```bash
-cd AdminDashbord
-```
+## 🧩 Extending the System
 
-Install dependencies:
-```bash
-npm install react react-dom react-router-dom axios lucide-react recharts framer-motion socket.io-client tailwindcss
-```
-
-Install development dependencies:
-```bash
-npm install --save-dev vite @vitejs/plugin-react eslint eslint-plugin-react-hooks eslint-plugin-react-refresh @types/react @types/react-dom @eslint/js globals autoprefixer postcss
-```
-
-**Or simply:**
-```bash
-npm install
-```
+- **Add Payment Gateway:** Integrate Stripe/Razorpay in both client and backend.
+- **Advanced Analytics:** Add exportable reports and more granular metrics.
+- **Dark Mode:** Implement Tailwind dark mode in client app.
+- **JWT Auth:** Upgrade admin authentication to JWT for enhanced security.
 
 ---
 
-## 📜 Available Scripts
+## 📝 Contribution Guide
 
-### Server
-- `npm start`: Runs the server using Node.
-- `npm run dev`: Runs the server using Nodemon (auto-restart).
-
-### Client & Admin
-- `npm run dev`: Starts the development server.
-- `npm run build`: Builds the app for production.
-- `npm run preview`: Previews the production build.
-
----
-
-## 🔌 API Overview
-
-The backend provides a RESTful API with the following main endpoints:
-
-- **Auth**: `/api/auth` (User login/registration)
-- **Admin**: `/api/admin` (Admin verification)
-- **Items**: `/api/items` (CRUD for menu items)
-- **Orders**: `/api/orders` (Place and manage orders)
-- **Coupons**: `/api/coupons` (Validate and manage coupons)
-
----
-
-## 🔐 Authentication Flow
-
-- **Users**: Phone number based login. Creates a user record if one doesn't exist.
-- **Admin**: Secured via a Secret Access Code (`ADMIN_SECRET_CODE`) defined in environment variables.
-
----
-
-## ✅ Best Practices & Performance
-
-- **Component-Based Architecture**: Reusable UI components.
-- **Optimized Assets**: Using Vite for fast bundling and HMR.
-- **Responsive Design**: Mobile-first approach using Tailwind CSS.
-- **Clean Code**: MVC pattern in backend and Context/Hooks pattern in frontend.
-- **Error Handling**: Centralized error management in API.
-
----
-
-## 🔮 Future Improvements
-
-- [ ] Implement robust JWT authentication for Admins.
-- [ ] Add payment gateway integration (Stripe/Razorpay).
-- [ ] Enhance analytics with exportable reports.
-- [ ] Add dark mode support for Client App.
-
----
-
-## 🤝 Contribution
-
-Contributions are welcome! Please fork the repository and create a pull request.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the repo and create a feature branch.
+2. Make your changes and commit with clear messages.
+3. Push and open a pull request.
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+MIT License. See `LICENSE` for details.
+
+---
+
+## 📞 Support
+
+For issues, open a GitHub issue or contact the maintainer.
+
+---
+
+This README provides a comprehensive overview for developers, contributors, and advanced users. For further details, see the codebase and documentation files.

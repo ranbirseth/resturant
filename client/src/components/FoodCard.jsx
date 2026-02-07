@@ -59,12 +59,19 @@ const FoodCard = ({ item }) => {
           <img 
             src={item.image} 
             alt={item.name} 
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${!item.available ? 'grayscale opacity-60' : ''}`}
           />
           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             {item.rating}
           </div>
+          {!item.available && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-black/70 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                Sold Out
+              </span>
+            </div>
+          )}
         </div>
         <div className="p-4">
           <div className="flex justify-between items-start mb-2">
@@ -75,7 +82,12 @@ const FoodCard = ({ item }) => {
             <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
             <button 
               onClick={handleAddKey}
-              className="bg-orange-100 text-orange-600 p-2 rounded-xl hover:bg-orange-500 hover:text-white transition-colors"
+              disabled={!item.available}
+              className={`p-2 rounded-xl transition-colors ${
+                item.available 
+                  ? 'bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white' 
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
             >
               <Plus className="w-5 h-5" />
             </button>

@@ -106,7 +106,7 @@ const BillingScreen = () => {
               <input 
                 type="text" 
                 placeholder="Quick search menu..." 
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl border border-transparent focus:border-primary-billing focus:bg-white transition-all outline-none text-sm font-medium"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl border border-transparent focus:border-orange-500 focus:ring-4 focus:ring-orange-100 focus:bg-white transition-all outline-none text-sm font-medium"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -121,15 +121,16 @@ const BillingScreen = () => {
             <button
               key={item._id}
               onClick={() => addToCart(item)}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-primary-billing hover:shadow-xl hover:-translate-y-1 transition-all text-left flex flex-col justify-between group h-40"
+              className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left flex flex-col justify-between group h-40 relative overflow-hidden"
             >
-              <div>
-                <span className="text-[10px] font-black text-primary-billing uppercase tracking-[0.2em] bg-orange-50 px-2 py-1 rounded-md">{item.category}</span>
-                <h3 className="text-lg font-bold text-gray-800 mt-2 line-clamp-2">{item.name}</h3>
+              <div className="absolute top-0 right-0 w-20 h-20 bg-orange-50/50 rounded-bl-full -mr-10 -mt-10 group-hover:bg-orange-100/50 transition-colors" />
+              <div className="relative z-10">
+                <span className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] bg-orange-50 px-2 py-1 rounded-md border border-orange-100">{item.category}</span>
+                <h3 className="text-lg font-bold text-gray-800 mt-2 line-clamp-2 group-hover:text-orange-700 transition-colors">{item.name}</h3>
               </div>
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xl font-black text-gray-900 tracking-tight">₹{item.price}</span>
-                <div className="bg-gray-50 p-2 rounded-xl group-hover:bg-primary-billing group-hover:text-white transition-all group-hover:rotate-90">
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-50 relative z-10">
+                <span className="text-xl font-black text-gray-900 tracking-tight group-hover:scale-110 transition-transform origin-left">₹{item.price}</span>
+                <div className="bg-orange-50 p-2 rounded-xl text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300 group-hover:rotate-90 shadow-sm group-hover:shadow-orange-200">
                   <Plus size={20} />
                 </div>
               </div>
@@ -149,7 +150,7 @@ const BillingScreen = () => {
         <div className="p-6 border-b border-gray-100 flex items-center gap-2 bg-white">
           <ShoppingCart className="text-primary-billing" />
           <h2 className="text-xl font-black text-gray-800 tracking-tight">Current Order</h2>
-          <span className="ml-auto bg-primary-billing text-white px-3 py-1 rounded-full text-[10px] font-black">
+          <span className="ml-auto bg-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg shadow-orange-100">
             {cart.length} ITEMS
           </span>
         </div>
@@ -164,17 +165,17 @@ const BillingScreen = () => {
             </div>
           ) : (
             cart.map(item => (
-              <div key={item._id} className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 group animate-in slide-in-from-right-4 duration-200">
+              <div key={item._id} className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 group animate-in slide-in-from-right-4 duration-300 hover:shadow-md hover:border-orange-100 transition-all">
                 <div className="flex-1">
-                  <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.name}</h4>
+                  <h4 className="font-bold text-gray-800 text-sm line-clamp-1 group-hover:text-orange-600 transition-colors uppercase tracking-tight">{item.name}</h4>
                   <p className="text-[11px] font-bold text-gray-400">₹{item.price} per unit</p>
                 </div>
-                <div className="flex items-center bg-gray-50 rounded-xl border border-gray-100 p-1">
-                  <button onClick={() => updateQuantity(item._id, -1)} className="w-8 h-8 flex items-center justify-center hover:text-red-500 transition-colors">
+                <div className="flex items-center bg-gray-50 rounded-xl border border-gray-100 p-0.5">
+                  <button onClick={() => updateQuantity(item._id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white hover:shadow-sm rounded-lg transition-all">
                     <Minus size={14} />
                   </button>
-                  <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item._id, 1)} className="w-8 h-8 flex items-center justify-center hover:text-primary-billing transition-colors">
+                  <span className="w-6 text-center font-black text-sm text-gray-700">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item._id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-orange-600 hover:bg-white hover:shadow-sm rounded-lg transition-all">
                     <Plus size={14} />
                   </button>
                 </div>
@@ -242,16 +243,19 @@ const BillingScreen = () => {
             <button
               onClick={handleGenerateBill}
               disabled={loading || cart.length === 0}
-              className="w-full bg-primary-billing hover:bg-orange-600 disabled:bg-gray-300 text-white font-black py-5 rounded-2xl shadow-xl shadow-orange-200 transition-all flex items-center justify-center gap-3 text-lg"
+              className="w-full relative group overflow-hidden"
             >
-              {loading ? (
-                <span className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <Receipt size={24} />
-                  GENERATE BILL
-                </>
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:scale-105 group-active:scale-95 rounded-2xl" />
+              <div className="relative z-10 bg-orange-500 hover:bg-transparent disabled:bg-gray-300 text-white font-black py-5 rounded-2xl shadow-xl shadow-orange-200 transition-all flex items-center justify-center gap-3 text-lg border-b-4 border-orange-700 active:border-b-0 active:translate-y-1">
+                {loading ? (
+                  <span className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></span>
+                ) : (
+                  <>
+                    <Receipt size={24} className="group-hover:bounce transition-transform" />
+                    GENERATE BILL
+                  </>
+                )}
+              </div>
             </button>
           </div>
         </div>

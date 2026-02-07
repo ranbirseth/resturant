@@ -57,7 +57,7 @@ const MenuForm = ({ item, onSubmit, onCancel, loading }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-billing transition-all text-sm font-medium"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-sm font-medium"
               placeholder="e.g. Butter Chicken"
             />
           </div>
@@ -71,7 +71,7 @@ const MenuForm = ({ item, onSubmit, onCancel, loading }) => {
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-billing transition-all text-sm font-medium"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-sm font-medium"
                 placeholder="0.00"
                 min="0"
                 step="0.01"
@@ -85,7 +85,7 @@ const MenuForm = ({ item, onSubmit, onCancel, loading }) => {
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-billing transition-all text-sm font-medium"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-sm font-medium"
                 placeholder="e.g. Main Course"
               />
             </div>
@@ -128,16 +128,19 @@ const MenuForm = ({ item, onSubmit, onCancel, loading }) => {
             <button
               disabled={loading}
               type="submit"
-              className="flex-1 bg-primary-billing hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-100 flex items-center justify-center gap-2 transition-all disabled:bg-gray-300 text-sm"
+              className="flex-1 relative group overflow-hidden rounded-xl shadow-lg shadow-orange-100 disabled:shadow-none"
             >
-              {loading ? (
-                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <Save size={18} />
-                  {item ? 'Save Changes' : 'Add Item'}
-                </>
-              )}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:scale-105 transition-transform duration-300" />
+              <div className="relative bg-orange-500 hover:bg-transparent text-white font-bold py-3 px-4 flex items-center justify-center gap-2 transition-all disabled:bg-gray-300">
+                {loading ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                ) : (
+                  <>
+                    <Save size={18} className="group-hover:bounce transition-transform" />
+                    {item ? 'Save Changes' : 'Add Item'}
+                  </>
+                )}
+              </div>
             </button>
           </div>
         </form>

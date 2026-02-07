@@ -48,34 +48,35 @@ const checkUser = async (req, res) => {
     }
 };
 
+const Order = require('../models/Order');
+
 // @desc    Get all users
 // @route   GET /api/auth/all
 // @access  Public (should be Admin, but strict auth is not implemented yet)
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({}).sort({ createdAt: -1 });
-
-        // Enhance users with order count if Order model is available
-        // Note: Ideally, this should be an aggregation query for performance, 
-        // but for now, we'll keep it simple or just return users.
-        // If we want order counts, we need to import Order model.
-        // checking if Order model is required here or if we can do a simple lookup.
-
-        // To keep it simple and performant for now:
-        const usersWithStats = await Promise.all(users.map(async (user) => {
-            // This is n+1 problem but fine for small scale. 
-            // Better approach: User.aggregate lookup orders
-            // For now, let's just return the user data.
-            return {
-                id: user._id,
-                name: user.name,
-                email: user.email || 'N/A', // Schema might not have email, using fallback
-                phone: user.mobile,
-                joined: user.createdAt,
-                status: 'Active', // Default status as we don't have block logic yet
-                orders: 0 // Placeholder, or we can fetch if needed
-            };
-        }));
+        const usersWithStats = await User.aggregate([
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'orders',
+                    localField: '_id',
+                    foreignField: 'userId',
+                    as: 'userOrders'
+                }
+            },
+            {
+                $project: {
+                    id: '$_id',
+                    name: 1,
+                    email: { $ifNull: ['$email', 'N/A'] },
+                    phone: '$mobile',
+                    joined: '$createdAt',
+                    status: { $literal: 'Active' },
+                    orders: { $size: '$userOrders' }
+                }
+            }
+        ]);
 
         res.json(usersWithStats);
     } catch (error) {
