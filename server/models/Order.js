@@ -18,6 +18,7 @@ const orderSchema = new mongoose.Schema({
     discountAmount: { type: Number, default: 0 },
     orderType: { type: String, enum: ['Dine-in', 'Takeaway'], required: true },
     tableNumber: { type: String }, // Required if Dine-in
+    paymentMode: { type: String, default: 'Cash' }, // Cash, UPI, Card
     status: { type: String, enum: ['Pending', 'Preparing', 'Ready', 'Completed', 'Cancelled', 'ChangeRequested', 'Updated'], default: 'Pending' },
     feedbackStatus: {
         type: String,

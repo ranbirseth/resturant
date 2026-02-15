@@ -22,6 +22,7 @@ import Modal from '../components/ui/Modal';
 import SessionOrderCard from '../components/SessionOrderCard';
 import { getGroupedOrders, getOrders, updateOrderStatus } from '../services/orderService';
 import { useSocket } from '../context/SocketContext';
+import PrintableBill from '../components/billing/PrintableBill';
 
 const statusVariants = {
   'Pending': 'amber',
@@ -39,9 +40,38 @@ export default function Orders() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Billing Modal State
-  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
-  const [billSession, setBillSession] = useState(null);
+  // Billing State
+  const [viewingBill, setViewingBill] = useState(null);
+
+  const calculateBillData = (session) => {
+    // Aggregate items
+    const allItems = [];
+    session.orders.forEach(order => {
+      order.items.forEach(item => {
+        const existing = allItems.find(
+          i => i.name === item.name && JSON.stringify(i.customizations) === JSON.stringify(item.customizations)
+        );
+        if (existing) {
+          existing.quantity += item.quantity;
+          existing.total = existing.quantity * existing.price;
+        } else {
+          allItems.push({ ...item, total: item.quantity * item.price });
+        }
+      });
+    });
+
+    return {
+      billNumber: session.sessionId.slice(-8).toUpperCase(),
+      createdAt: session.createdAt,
+      orderType: session.orderType,
+      items: allItems,
+      subtotal: session.grossTotal,
+      discount: session.discountAmount,
+      gst: Math.round(session.grossTotal * 0.05), // Approximate if not stored, or verify logic
+      grandTotal: session.totalAmount,
+      paymentMode: session.paymentMode || 'Cash',
+    };
+  };
 
   const [filter, setFilter] = useState('All');
   const [viewMode, setViewMode] = useState('grouped'); // 'grouped' or 'individual'
@@ -224,132 +254,18 @@ export default function Orders() {
     }
   };
 
-  const generateSessionPdf = (sessionData) => {
-    const doc = new jsPDF();
-
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(220, 38, 38); // Red color
-    doc.text('Zing Zaika', 105, 20, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text('Restaurant & Delivery', 105, 28, { align: 'center' });
-    doc.text('123 Food Street, Tasty Town', 105, 34, { align: 'center' });
-
-    // Session Details
-    doc.setTextColor(0);
-    doc.setFontSize(10);
-    doc.text(`Session ID: ${sessionData.sessionId.slice(-12).toUpperCase()}`, 14, 50);
-    doc.text(`Date: ${new Date(sessionData.createdAt).toLocaleDateString()}`, 14, 56);
-    doc.text(`Time: ${new Date(sessionData.createdAt).toLocaleTimeString()}`, 14, 62);
-
-    doc.text(`Customer: ${sessionData.userId?.name || 'Guest'}`, 140, 50);
-    doc.text(`Phone: ${sessionData.userId?.mobile || 'N/A'}`, 140, 56);
-    doc.text(`Type: ${sessionData.orderType}`, 140, 62);
-    if (sessionData.tableNumber) {
-        doc.text(`Table: ${sessionData.tableNumber}`, 140, 68);
-    }
-
-    // Collect all items from all orders
-    const allItems = [];
-    sessionData.orders.forEach(order => {
-      order.items.forEach(item => {
-        const existing = allItems.find(
-          i => i.name === item.name && JSON.stringify(i.customizations) === JSON.stringify(item.customizations)
-        );
-        if (existing) {
-          existing.quantity += item.quantity;
-        } else {
-          allItems.push({ ...item });
-        }
-      });
-    });
-
-    // Items Table
-    const tableColumn = ["Item", "Qty", "Price", "Amount"];
-    const tableRows = [];
-
-    allItems.forEach(item => {
-      const itemData = [
-        item.name + (item.customizations?.length ? ` (${item.customizations.join(', ')})` : ''),
-        item.quantity,
-        `Rs. ${item.price}`,
-        `Rs. ${item.price * item.quantity}`
-      ];
-      tableRows.push(itemData);
-    });
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 75,
-      theme: 'grid',
-      headStyles: { fillColor: [220, 38, 38] },
-    });
-
-    const finalY = doc.lastAutoTable.finalY || 75;
-
-    // Total Section
-    doc.setFontSize(10);
-    doc.text(`Number of Orders: ${sessionData.orders.length}`, 14, finalY + 10);
-    
-    if (sessionData.discountAmount > 0) {
-      doc.text(`Subtotal: Rs. ${sessionData.grossTotal}`, 140, finalY + 10);
-      doc.text(`Discount: Rs. ${sessionData.discountAmount}`, 140, finalY + 16);
-    }
-    
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Total Amount: Rs. ${sessionData.totalAmount}`, 140, finalY + (sessionData.discountAmount > 0 ? 25 : 16));
-
-    // Footer
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.text('Thank you for dining with us!', 105, 280, { align: 'center' });
-
-    // Save PDF
-    const fileName = `Bill_Session_${sessionData.sessionId.slice(-8).toUpperCase()}.pdf`;
-    doc.save(fileName);
-    return fileName;
-  };
-
   const openBillModal = (sessionData) => {
-    setBillSession(sessionData);
-    setIsBillModalOpen(true);
-  };
-
-  const handleSaveBill = () => {
-    if (!billSession) return;
-    generateSessionPdf(billSession);
-    setIsBillModalOpen(false);
-  };
-
-  const handleShareBill = () => {
-    if (!billSession) return;
-    const fileName = generateSessionPdf(billSession);
-    
-    // WhatsApp Share logic
-    if (billSession.userId?.mobile) {
-      const message = `Hello ${billSession.userId.name}, here is your bill for your visit. Total Amount: Rs. ${billSession.totalAmount}. Thank you for choosing Zing Zaika!`;
-      const whatsappUrl = `https://wa.me/91${billSession.userId.mobile}?text=${encodeURIComponent(message)}`;
-      
-      window.open(whatsappUrl, '_blank');
-      
-      setTimeout(() => {
-         alert(`Bill downloaded! Please attach "${fileName}" to the WhatsApp chat.`);
-      }, 500);
-    } else {
-        alert('Bill downloaded! Customer mobile number not found for WhatsApp share.');
-    }
-    
-    setIsBillModalOpen(false);
+    setViewingBill(sessionData);
   };
 
   const openSessionDetails = (sessionData) => {
     setSelectedSession(sessionData);
     setIsModalOpen(true);
   };
+
+  if (viewingBill) {
+    return <PrintableBill bill={calculateBillData(viewingBill)} onBack={() => setViewingBill(null)} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -540,46 +456,6 @@ export default function Orders() {
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* Bill Options Modal */}
-      <Modal
-        isOpen={isBillModalOpen}
-        onClose={() => setIsBillModalOpen(false)}
-        title="Billing Options"
-        footer={
-          <Button variant="secondary" className="w-full" onClick={() => setIsBillModalOpen(false)}>Cancel</Button>
-        }
-      >
-        <div className="space-y-4 p-4">
-           <p className="text-slate-600 text-center mb-6">
-             Choose how you want to process the bill for <span className="font-bold">{billSession?.userId?.name || 'Guest'}</span>
-           </p>
-           
-           <div className="grid grid-cols-2 gap-4">
-             <button
-               onClick={handleSaveBill}
-               className="flex flex-col items-center justify-center p-6 border-2 border-slate-100 rounded-2xl hover:border-red-100 hover:bg-red-50 transition-all group"
-             >
-               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-red-100 text-slate-600 group-hover:text-red-600 transition-colors">
-                 <Download size={24} />
-               </div>
-               <span className="font-bold text-slate-800">Save PDF</span>
-               <span className="text-xs text-slate-500 mt-1">Download to device</span>
-             </button>
-
-             <button
-               onClick={handleShareBill}
-               className="flex flex-col items-center justify-center p-6 border-2 border-slate-100 rounded-2xl hover:border-green-100 hover:bg-green-50 transition-all group"
-             >
-               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-green-100 text-slate-600 group-hover:text-green-600 transition-colors">
-                 <Share2 size={24} />
-               </div>
-               <span className="font-bold text-slate-800">Share on WhatsApp</span>
-               <span className="text-xs text-slate-500 mt-1">Open chat & attach</span>
-             </button>
-           </div>
-        </div>
       </Modal>
     </div>
   );

@@ -10,10 +10,25 @@ const PrintableBill = ({ bill, onBack }) => {
   });
 
   const shareOnWhatsApp = () => {
-    const text = `*SECOND WIFE RESTAURANT*\nBill No: ${bill.billNumber}\nTotal: ₹${bill.grandTotal}\nThank you for dining with us!`;
+    const text = `*Zing Zaika *\nBill No: ${bill.billNumber}\nTotal: ₹${bill.grandTotal}\nThank you for dining with us!`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
+
+  // Helper to format currency
+  const formatCurrency = (amount) => {
+    return Number(amount).toFixed(2);
+  };
+
+  // Calculations
+  const subTotal = bill.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const discount = bill.discount || 0;
+  const taxableAmount = subTotal - discount;
+  const cgst = taxableAmount * 0.025;
+  const sgst = taxableAmount * 0.025;
+  const totalWithTax = taxableAmount + cgst + sgst;
+  const roundOff = bill.grandTotal - totalWithTax;
+  const totalQty = bill.items.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
@@ -55,64 +70,114 @@ const PrintableBill = ({ bill, onBack }) => {
         {/* Paper Receipt Simulation */}
         <div 
           ref={componentRef} 
-          className="bg-white p-8 border-t-2 border-dashed border-gray-200 text-gray-800 font-mono text-sm leading-relaxed"
-          style={{ width: '100%' }}
+          className="bg-white p-4 text-black font-mono text-xs leading-tight"
+          style={{ width: '100%', maxWidth: '80mm', margin: '0 auto' }}
         >
-          <div className="text-center mb-6">
-            <h1 className="text-xl font-black uppercase tracking-widest mb-1">Second Wife</h1>
-            <p className="text-xs">123 Food Street, Downtown</p>
-            <p className="text-xs">Tel: +91 98765-43210</p>
-            <div className="my-4 border-b border-gray-100"></div>
-            <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500">
-              <span>Bill: {bill.billNumber}</span>
-              <span>{new Date(bill.createdAt).toLocaleString()}</span>
+          <div className="text-center mb-4">
+            <h1 className="text-base font-bold uppercase mb-1"> Zing Zaika</h1>
+            <p>Near Ashirwad Hotel, Ganesh Cinema Road, Sitamarhi</p>
+            <p className="mt-1">Contact No.: 7903815234</p>
+          </div>
+
+          <div className="mb-4">
+            <p className="font-bold border-b border-black pb-1 mb-2">Customer Details</p>
+            <p>Name: ______________________</p>
+          </div>
+
+          <div className="mb-4">
+            <p className="font-bold border-b border-black pb-1 mb-2">Bill Details</p>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+               <div className="flex justify-between">
+                 <span>Date</span>
+                 <span>{new Date(bill.createdAt).toLocaleDateString('en-GB')}</span>
+               </div>
+               <div className="flex justify-between">
+                 <span>Time</span>
+                 <span>{new Date(bill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+               </div>
+               <div className="flex justify-between">
+                 <span>Order Type</span>
+                 <span>{bill.orderType === 'Takeaway' ? 'Pick Up' : bill.orderType}</span>
+               </div>
+               <div className="flex justify-between">
+                  <span>Bill No.</span>
+                  <span>{bill.billNumber}</span>
+               </div>
+               <div className="flex justify-between col-span-2">
+                  <span>Cashier</span>
+                  <span>biller</span>
+               </div>
             </div>
           </div>
 
-          <table className="w-full mb-6 text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-left">
-                <th className="py-2">ITEM</th>
-                <th className="py-2 text-center">QTY</th>
-                <th className="py-2 text-right">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bill.items.map((item, idx) => (
-                <tr key={idx} className="border-b border-gray-50">
-                  <td className="py-3 font-bold">{item.name}</td>
-                  <td className="py-3 text-center">{item.quantity}</td>
-                  <td className="py-3 text-right">₹{item.total}</td>
+          <div className="mb-4">
+            <p className="font-bold border-b border-black pb-1 mb-2">Order Summary</p>
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-black border-dashed">
+                  <th className="py-1 w-1/2">Item Name</th>
+                  <th className="py-1 text-center">Qty</th>
+                  <th className="py-1 text-right">Price (₹)</th>
+                  <th className="py-1 text-right">Amount (₹)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {bill.items.map((item, idx) => (
+                  <tr key={idx} className="">
+                    <td className="py-1 pr-1">{item.name}</td>
+                    <td className="py-1 text-center">{item.quantity}</td>
+                    <td className="py-1 text-right">{formatCurrency(item.price)}</td>
+                    <td className="py-1 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <div className="space-y-2 border-t border-gray-200 pt-4">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>₹{bill.subtotal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>GST (5%)</span>
-              <span>₹{bill.gst}</span>
-            </div>
-            {bill.discount > 0 && (
-              <div className="flex justify-between text-red-500">
-                <span>Discount</span>
-                <span>-₹{bill.discount}</span>
+          <div className="mb-6">
+            <p className="font-bold border-b border-black pb-1 mb-2">Billing Summary</p>
+            <div className="space-y-1">
+               <div className="flex justify-between border-b border-dashed border-gray-400 pb-1">
+                 <span>Description</span>
+                 <span>Amount (₹)</span>
+               </div>
+              <div className="flex justify-between pt-1">
+                <span>Total Quantity</span>
+                <span>{totalQty}</span>
               </div>
-            )}
-            <div className="flex justify-between text-lg font-black pt-2 border-t border-gray-800">
-              <span>TOTAL</span>
-              <span>₹{bill.grandTotal}</span>
+              <div className="flex justify-between">
+                <span>Sub Total</span>
+                <span>{formatCurrency(subTotal)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between">
+                  <span>Discount (Fixed)</span>
+                  <span>-{formatCurrency(discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>CGST 2.5%</span>
+                <span>{formatCurrency(cgst)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>SGST 2.5%</span>
+                <span>{formatCurrency(sgst)}</span>
+              </div>
+               <div className="flex justify-between">
+                <span>Round Off</span>
+                <span>{roundOff >= 0 ? '+' : ''}{formatCurrency(roundOff)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-sm border-t border-black border-dashed pt-1 mt-1">
+                <span>Grand Total:</span>
+                <span>₹{formatCurrency(bill.grandTotal)}</span>
+              </div>
             </div>
           </div>
 
-          <div className="mt-8 text-center bg-gray-50 p-4 rounded-lg">
-            <p className="text-xs font-bold uppercase mb-1">Payment: {bill.paymentMode}</p>
-            <p className="text-xs">THANK YOU FOR YOUR VISIT!</p>
-            <p className="text-[10px] text-gray-400 mt-2">www.secondwiferestaurant.com</p>
+          <div className="text-center border-t-2 border-dashed border-black pt-2">
+            <p className="font-bold mb-1">Paid: {bill.paymentMode}</p>
+            <p className="font-bold">Thank You & Visit Again</p>
+             <p className="text-[10px] mt-1">😊</p>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ const SessionManager = require('../utils/SessionManager');
 // @route   POST /api/orders
 // @access  Public (User ID required)
 const createOrder = async (req, res) => {
-    const { userId, items, totalAmount, orderType, tableNumber, couponCode, discountAmount, grossTotal } = req.body;
+    const { userId, items, totalAmount, orderType, tableNumber, couponCode, discountAmount, grossTotal, paymentMode } = req.body;
 
     if (!items || items.length === 0) {
         return res.status(400).json({ message: 'No order items' });
@@ -39,6 +39,7 @@ const createOrder = async (req, res) => {
             discountAmount,
             orderType,
             tableNumber,
+            paymentMode,
             status: 'Pending',
             completionConfig: {
                 countDownSeconds: maxPrepTime * 60
@@ -173,6 +174,7 @@ const getGroupedOrders = async (req, res) => {
                     status: 'Pending', // Placeholder - will be calculated below
                     orderType: order.orderType,
                     tableNumber: order.tableNumber,
+                    paymentMode: order.paymentMode || 'Cash',
                     createdAt: order.createdAt,
                     updatedAt: order.updatedAt
                 };

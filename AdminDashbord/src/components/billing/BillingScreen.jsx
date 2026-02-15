@@ -12,6 +12,7 @@ const BillingScreen = () => {
   const [cart, setCart] = useState([]);
   const [discount, setDiscount] = useState(0);
   const [paymentMode, setPaymentMode] = useState('Cash');
+  const [orderType, setOrderType] = useState('Takeaway');
   const [generatedBill, setGeneratedBill] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -70,7 +71,8 @@ const BillingScreen = () => {
       const orderData = {
         items: cart,
         discount,
-        paymentMode
+        paymentMode,
+        orderType
       };
       const { data } = await createOrder(orderData);
       setGeneratedBill(data);
@@ -215,19 +217,36 @@ const BillingScreen = () => {
           </div>
           
           <div className="pt-4 border-t border-gray-100">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Payable Amount</span>
-                <span className="text-4xl font-black text-gray-900 tracking-tighter">₹{total}</span>
-              </div>
-              <div className="flex flex-col items-end">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                 {/* Order Type Selector */}
+                 <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Order Type</span>
+                   <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
+                    {['Dine-in', 'Takeaway'].map(type => (
+                      <button
+                        key={type}
+                        onClick={() => setOrderType(type)}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${
+                          orderType === type 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment Mode Selector */}
+                <div className="flex flex-col items-end">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Payment Mode</span>
-                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
+                <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 w-full">
                   {['Cash', 'UPI', 'Card'].map(mode => (
                     <button
                       key={mode}
                       onClick={() => setPaymentMode(mode)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
+                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${
                         paymentMode === mode 
                         ? 'bg-white text-gray-900 shadow-sm' 
                         : 'text-gray-400 hover:text-gray-600'
@@ -237,6 +256,13 @@ const BillingScreen = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Payable Amount</span>
+                <span className="text-4xl font-black text-gray-900 tracking-tighter">₹{total}</span>
               </div>
             </div>
 
